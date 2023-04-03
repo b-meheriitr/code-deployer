@@ -1,0 +1,6 @@
+logging:
+  override-global-console-methods: true
+  file-logging: true
+  file-transport-root-path: ./logs
+  level: silly
+  skip-morgan-requests-log: false

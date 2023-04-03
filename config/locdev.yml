@@ -1,0 +1,8 @@
+server:
+  port: 8011
+logging:
+  override-global-console-methods: false
+  file-logging: false
+  file-transport-root-path: ./logs
+  level: silly
+  skip-morgan-requests-log: true

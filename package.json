@@ -1,0 +1,78 @@
+{
+  "name": "node-code-deployer",
+  "version": "1.0.0",
+  "author": "Bhubaneshwar.Meher",
+  "description": "REST API service to deploy nodeJS apps",
+  "main": "src/app.js",
+  "license": "ISC",
+  "keywords": [
+    "NodeJS",
+    "Deployment",
+    "PM2"
+  ],
+  "private": true,
+  "scripts": {
+    "clean": "rm -rf dist",
+    "build": "npm-run-all clean compile",
+    "bundle": "npm-run-all clean compile:bundle",
+    "compile": "babel ./src --out-dir dist --copy-files  --extensions '.ts,.js'",
+    "compile:bundle": "node bundle.js",
+    "dev": "ts-node ./src/bin/www.js",
+    "start": "node --enable-source-maps ./dist/bin/www.js",
+    "start:bundle": "node --enable-source-maps ./dist/bundle/app.min.js",
+    "lint": "eslint -c .eslintrc.js \"src/**/*.{js,ts}\"",
+    "lint:fix": "eslint -c .eslintrc.js \"src/**/*{.js,ts}\" --fix",
+    "lint-staged": "lint-staged --no-stash"
+  },
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "config": "^3.3.9",
+    "debug": "~4.3.4",
+    "dotenv": "^16.0.3",
+    "express": "~4.18.2",
+    "moment": "^2.29.4",
+    "morgan": "~1.10.0",
+    "npm-run-all": "^4.1.5",
+    "uuid": "^9.0.0",
+    "winston": "^3.8.2"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.21.0",
+    "@babel/core": "^7.21.4",
+    "@babel/node": "^7.20.7",
+    "@babel/preset-env": "^7.21.4",
+    "@babel/preset-typescript": "^7.21.4",
+    "@types/chalk": "^2.2.0",
+    "@types/config": "^3.3.0",
+    "@types/dotenv": "^8.2.0",
+    "@types/express": "^4.17.17",
+    "@types/moment": "^2.13.0",
+    "@types/morgan": "^1.9.4",
+    "@types/uuid": "^9.0.1",
+    "@types/winston": "^2.4.4",
+    "@typescript-eslint/eslint-plugin": "^5.57.0",
+    "@typescript-eslint/parser": "^5.57.0",
+    "babel-preset-minify": "^0.5.2",
+    "esbuild": "^0.17.15",
+    "eslint": "^8.37.0",
+    "eslint-config-airbnb": "^19.0.4",
+    "eslint-config-airbnb-typescript": "^17.0.0",
+    "eslint-import-resolver-typescript": "^3.5.4",
+    "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-no-useless-assign": "^1.0.3",
+    "eslint-plugin-unused-imports": "^2.0.0",
+    "lint-staged": "^13.2.0",
+    "lodash.merge": "^4.6.2",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.0.3"
+  },
+  "engines": {
+    "node": "16.X"
+  },
+  "lint-staged": {
+    "src/**/*.{js,jsx,ts,css,html}": [
+      "eslint --fix"
+    ],
+    "*": []
+  }
+}
