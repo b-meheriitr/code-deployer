@@ -15,3 +15,9 @@ export class SourceBackupDirNotExistErr extends Error {
 		super(`Source backup dir ${sourceDir} does not exist. Can't backup`)
 	}
 }
+
+export class CorruptedIncomingZipError extends Error {
+	constructor() {
+		super('Uploaded zip is corrupted/invalid')
+	}
+}

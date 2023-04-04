@@ -1,4 +1,5 @@
 import multer from 'multer'
+import {verifyIncomingZipBuffer} from '../utils/files.utils'
 
 export function formDataFileToBufferMw() {
 	const upload = multer({
@@ -7,4 +8,13 @@ export function formDataFileToBufferMw() {
 	})
 
 	return upload.single('file')
+}
+
+export function verifyIncomingZip(req, res, next) {
+	try {
+		verifyIncomingZipBuffer(req.file.buffer)
+		next()
+	} catch (err) {
+		next(err)
+	}
 }

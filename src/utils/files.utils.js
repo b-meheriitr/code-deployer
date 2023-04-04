@@ -3,7 +3,7 @@ import archiver from 'archiver'
 import fs from 'fs'
 import minimatch from 'minimatch'
 import path from 'path'
-import {SourceBackupDirNotExistErr} from '../errors/errors'
+import {CorruptedIncomingZipError, SourceBackupDirNotExistErr} from '../errors/errors'
 
 const removeFileSync = filePath => fs.rmSync(filePath)
 
@@ -111,11 +111,32 @@ export function deleteFolder(dirPath, ignore = []) {
 // 	})
 // }
 
+const newAdmZip = pathOrBuffer => {
+	if (typeof pathOrBuffer === 'string') {
+		return new AdmZip(pathOrBuffer)
+	}
+
+	if (!pathOrBuffer.singletonAdmZip) {
+		pathOrBuffer.singletonAdmZip = new AdmZip(pathOrBuffer)
+	}
+	return pathOrBuffer.singletonAdmZip
+}
+
+const verifyIncomingZipBuffer = pathOrBuffer => {
+	try {
+		newAdmZip(pathOrBuffer)
+	} catch (e) {
+		throw new CorruptedIncomingZipError()
+	}
+}
+
+export {verifyIncomingZipBuffer}
+
 export function unzip(pathOrBuffer, extractPath) {
 	createDirectoryRecursiveSync(extractPath)
 
 	return new Promise((resolve, reject) => {
-		const zip = new AdmZip(pathOrBuffer)
+		const zip = newAdmZip(pathOrBuffer)
 
 		zip.extractAllTo(extractPath, true)
 
