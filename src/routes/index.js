@@ -1,8 +1,8 @@
 import {Router} from 'express'
-import test from './test.route'
+import deployRoute from './deploy.route'
 
 const router = Router()
 
-router.use('/test', test)
+router.use('/deploy', deployRoute)
 
 export default router

@@ -6,3 +6,6 @@ logging:
   file-transport-root-path: ./logs
   level: silly
   skip-morgan-requests-log: true
+app:
+  backup-path: .backups
+  apps-executable-path: .executables

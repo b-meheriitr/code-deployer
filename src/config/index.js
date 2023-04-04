@@ -18,6 +18,10 @@ const config = {
 	API: {
 		BASE_PATH: get('api.base-path'),
 	},
+	APP: {
+		APPS_BACKUPS_PATH: `${get('app.backup-path')}`,
+		APPS_EXECUTABLE_PATH: `${get('app.apps-executable-path')}`,
+	},
 }
 
 export default config
@@ -25,6 +29,7 @@ export default config
 export const SERVER_CONFIG = config.SERVER
 export const LOGGING_CONFIG = config.LOGGING
 export const API_CONFIG = config.API
+export const APP_CONFIG = config.APP
 
 /*
 	Can't use localDevEnv NODE_ENV name as 'local' or 'local-development' while devEnv NODE_ENV name as 'development'

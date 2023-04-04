@@ -17,3 +17,6 @@ log*/**
 **/*.log
 
 .eslint.*.gen.json
+
+**/*.zip
+**/*.7z
