@@ -1,4 +1,5 @@
 import {AppIdNotFoundError, AppIdNotPresentInHeadersError} from '../errors/errors'
+import {Pm2ProcessErrorOnRestart} from '../errors/pm2.errors'
 import deployService from '../services/deploy.service'
 
 function getAppId(req) {
@@ -20,12 +21,16 @@ export default async (req, res) => {
 	} catch (err) {
 		if (err instanceof AppIdNotFoundError) {
 			return res.status(422)
-				.json({
-					message: `${err.message}. Register your app. If already done, edit the app.json file to include your app info`,
-				})
+				.json({message: `${err.message}. Register your app.`})
 		}
 		if (err instanceof AppIdNotPresentInHeadersError) {
 			return res.status(422).json({message: err.message})
+		}
+		if (err instanceof Pm2ProcessErrorOnRestart) {
+			return res.status(449).json({
+				message: 'Error in startup',
+				err,
+			})
 		}
 		throw err
 	}
