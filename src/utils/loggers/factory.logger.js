@@ -28,7 +28,7 @@ class DefaultLoggerFactory {
 				level: getMinLogLevel(level),
 				format: format.combine(
 					exactLogLevelMatch(level),
-					colorizeMessage(),
+					colorizeMessage,
 					printLog,
 				),
 			})),
@@ -75,7 +75,7 @@ export default logStoragePath => {
 	return lgr
 }
 
-export const createLoggerOverridingConsole = () => {
+export const createConsoleLogger = () => {
 	return createLogger({
 		level: getMinLogLevel(),
 		levels: winstonLevels,
@@ -85,7 +85,7 @@ export const createLoggerOverridingConsole = () => {
 		}),
 		format: format.combine(
 			commonLogFormat,
-			colorizeMessage(),
+			colorizeMessage,
 		),
 	})
 }

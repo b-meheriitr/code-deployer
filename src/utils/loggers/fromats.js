@@ -31,7 +31,7 @@ export const printLog = format.printf(({level, message, label, timeStamp, reques
 	return `${coloredTimeStamp} | ${coloredLabel} | ${coloredReqId} | ${coloredLevel} -> ${message}`
 })
 
-export const colorizeMessage = () => format.colorize({message: true})
+export const colorizeMessage = format.colorize({message: true})
 
 export const unsetConsoleTransportFlag = format(info => {
 	info.consoleTransport = false
