@@ -1,26 +1,28 @@
 import fs from 'fs'
 import path from 'path'
 import {APP_CONFIG} from '../config'
-import {AppIdNotFoundError, SourceBackupDirNotExistErr} from '../errors/errors'
-import {Pm2ProcessErrorOnRestart} from '../errors/pm2.errors'
-import {backupFiles, deleteFolder, rollBackDeleted, unzipBufferStream} from '../utils/files.utils'
-import logger from '../utils/loggers'
+import {AppNotFoundError} from '../errors/errors'
+import {RollbackStatusesWithBaseReason} from '../models/RollbackStatus'
+import {FsActionsHelper} from '../utils/files.utils'
 import {dateString} from '../utils/utils'
 import {Pm2Service} from './pm2.service'
 
 const getAppInfo = async appId => {
 	const appPm2Path = path.join(APP_CONFIG.APPS_EXECUTABLE_PATH, appId, 'pm2.json')
-	let app = fs.existsSync(appPm2Path) && JSON.parse(await fs.promises.readFile(appPm2Path, 'utf-8') || '[]')[0]
+	let app = fs.existsSync(appPm2Path) && JSON.parse(await fs.promises.readFile(appPm2Path, 'utf-8'))[0]
 
 	if (!app) {
-		throw new AppIdNotFoundError(appId)
+		throw new AppNotFoundError(appId)
 	}
 
-	app = {...app, name: appId, cwd: path.join(APP_CONFIG.APPS_EXECUTABLE_PATH, appId)}
+	app = {
+		...app,
+		cwd: path.join(APP_CONFIG.APPS_EXECUTABLE_PATH, appId, app.cwd),
+	}
 
 	return {
 		backupPath: path.join(APP_CONFIG.APPS_BACKUPS_PATH, app.name),
-		dataPath: path.join(APP_CONFIG.APPS_EXECUTABLE_PATH, app.name),
+		dataPath: path.join(APP_CONFIG.APPS_EXECUTABLE_PATH, app.name, 'deployment'),
 		pm2: app,
 	}
 }
@@ -34,31 +36,36 @@ const getBackupFileName = backupOutFilePath => {
 export default async function (appId, ignoreDeletePattern, incomingZip) {
 	const {dataPath, backupPath, pm2} = await getAppInfo(appId)
 	const backupZipFilePath = getBackupFileName(backupPath)
-	// archive is corrupted when used '!' glob pattern
-	const ignoreBackup = ignoreDeletePattern.filter(p => !p.startsWith('!'))
-
-	try {
-		await backupFiles(
-			dataPath,
-			backupZipFilePath,
-			ignoreBackup,
-		)
-	} catch (err) {
-		if (!(err instanceof SourceBackupDirNotExistErr)) throw err
-	}
 
 	const pm2Service = new Pm2Service(pm2)
+	const fileActionsHelper = new FsActionsHelper(dataPath, backupZipFilePath, ignoreDeletePattern)
+
 	try {
-		// this can delete dataPath if it already does not exist
-		await deleteFolder(dataPath, ignoreDeletePattern)
-		await unzipBufferStream(incomingZip.buffer, dataPath)
+		await fileActionsHelper.backupSource()
+		await fileActionsHelper.deleteSourceDir()
+		await fileActionsHelper.unzipBufferStream(incomingZip.buffer)
 		await pm2Service.pm2Restart(pm2)
 	} catch (e) {
-		await rollBackDeleted(backupZipFilePath, dataPath)
-		if (e instanceof Pm2ProcessErrorOnRestart) {
-			logger.info('Error in startup, rolling back to previous version', e.message)
-			await pm2Service.pm2Rollback(pm2)
-		}
-		throw e
+		const rollbackStatuses = []
+
+		await fileActionsHelper.rollBackDeleted()
+			.then(
+				status => rollbackStatuses.push({for: 'rollBackDeleted', status: !!status}),
+				err => {
+					rollbackStatuses.push({for: 'rollBackDeleted', status: 'error', reason: err})
+					throw err
+				},
+			)
+			.then(() => pm2Service.pm2Rollback(pm2))
+			.then(
+				status => rollbackStatuses.push({for: 'pm2Rollback', status: !!status}),
+				err => {
+					rollbackStatuses.push({for: 'pm2Rollback', status: 'error', reason: err})
+					throw err
+				},
+			)
+			.catch(f => f)
+
+		throw new RollbackStatusesWithBaseReason(e, rollbackStatuses)
 	}
 }

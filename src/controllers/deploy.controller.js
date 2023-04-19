@@ -1,9 +1,9 @@
-import {AppIdNotFoundError, AppIdNotPresentInHeadersError} from '../errors/errors'
-import {Pm2ProcessErrorOnRestart} from '../errors/pm2.errors'
+import {AppIdNotPresentInHeadersError, AppNotFoundError} from '../errors/errors'
+import {RollbackStatusesWithBaseReason} from '../models/RollbackStatus'
 import deployService from '../services/deploy.service'
 
 function getAppId(req) {
-	const appId = req.headers['app-id']
+	const appId = req.headers['app-name']
 	if (!appId) {
 		throw new AppIdNotPresentInHeadersError()
 	}
@@ -19,17 +19,17 @@ export default async (req, res) => {
 		)
 		return res.status(201).send()
 	} catch (err) {
-		if (err instanceof AppIdNotFoundError) {
+		if (err instanceof AppNotFoundError) {
 			return res.status(422)
 				.json({message: `${err.message}. Register your app.`})
 		}
 		if (err instanceof AppIdNotPresentInHeadersError) {
 			return res.status(422).json({message: err.message})
 		}
-		if (err instanceof Pm2ProcessErrorOnRestart) {
+		if (err instanceof RollbackStatusesWithBaseReason) {
 			return res.status(449).json({
-				message: 'Error in startup',
-				err,
+				message: 'Error',
+				info: err,
 			})
 		}
 		throw err

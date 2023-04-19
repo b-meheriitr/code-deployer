@@ -79,34 +79,51 @@ export function deleteProcess(processName) {
 export class Pm2Service {
 	#newProcess
 
+	#appliedRestartSuccess
+
 	constructor(config) {
 		this.processName = config.name
 		this.config = config
 		this.#newProcess = undefined
 		this.isNewProcess = async () => {
 			if (this.#newProcess === undefined) {
-				const processExists = await findProcess(this.processName)
-					.then(() => true)
-					.catch(e => {
-						if (e instanceof Pm2ProcessNotFoundError) return false
-						throw e
-					})
-
-				this.#newProcess = !processExists
+				this.#newProcess = !(await this.#processExists())
 			}
 			return this.#newProcess
 		}
 	}
 
-	pm2Restart() {
-		return this.#restartProcess(true)
+	async pm2Restart() {
+		try {
+			await this.#restartProcess(true)
+				.then(() => (this.#appliedRestartSuccess = true))
+		} catch (e) {
+			this.#appliedRestartSuccess = false
+
+			if (e instanceof Pm2ProcessErrorOnRestart) {
+				logger.info('Error in startup, rolling back to previous version', e.message)
+			}
+
+			throw e
+		}
 	}
 
 	async pm2Rollback() {
-		if (await this.isNewProcess()) {
-			return deleteProcess(this.processName)
+		if (this.#appliedRestartSuccess !== undefined) {
+			if (await this.isNewProcess() /** && await this.#processExists() /** why this hangs when called here? * */) {
+				await deleteProcess(this.processName)
+					.catch(err => {
+						if (!(/process or namespace not found/.test(err.message))) {
+							throw err
+						}
+					})
+				return Promise.resolve(1)
+			}
+			await this.#restartProcess(this.processName)
+			return Promise.resolve(1)
 		}
-		return this.#restartProcess(this.processName)
+
+		return Promise.resolve(0)
 	}
 
 	#restartProcess(startIfNotExists) {
@@ -119,5 +136,14 @@ export class Pm2Service {
 
 			return listenForProcessToBeUp(this.processName)
 		})
+	}
+
+	#processExists() {
+		return findProcess(this.processName)
+			.then(() => true)
+			.catch(e => {
+				if (e instanceof Pm2ProcessNotFoundError) return false
+				throw e
+			})
 	}
 }

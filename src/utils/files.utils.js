@@ -148,7 +148,74 @@ export function unzipBufferStream(zipStream, extractPath) {
 	return unzip(zipStream, extractPath)
 }
 
-export function rollBackDeleted(backupZipPath, extractPath) {
-	return unzip(backupZipPath, extractPath)
-		.then(() => removeFileSync(backupZipPath))
+export class FsActionsHelper {
+	#sourceDir
+
+	#backupZipFilePath
+
+	#ignoreDeletePattern
+
+	#ignoreBackupPattern
+
+	#backupSuccess
+
+	#sourceDirExisted
+
+	constructor(sourceDir, backupZipFilePath, ignoreDeletePattern) {
+		this.#sourceDir = sourceDir
+		this.#backupZipFilePath = backupZipFilePath
+		this.#ignoreDeletePattern = ignoreDeletePattern
+		// archive is corrupted when used '!' glob pattern
+		this.#ignoreBackupPattern = this.#ignoreDeletePattern.filter(p => !p.startsWith('!'))
+	}
+
+	async backupSource() {
+		try {
+			await backupFiles(this.#sourceDir, this.#backupZipFilePath, this.#ignoreBackupPattern)
+
+			this.#sourceDirExisted = true
+			this.#backupSuccess = true
+
+			return true
+		} catch (err) {
+			if (err instanceof SourceBackupDirNotExistErr) {
+				this.#sourceDirExisted = false
+				this.#backupSuccess = true
+				return false
+			}
+			throw err
+		}
+	}
+
+	deleteSourceDir() {
+		if (this.#sourceDirExisted) {
+			return deleteFolder(this.#sourceDir, this.#ignoreDeletePattern)
+		}
+
+		return Promise.resolve(0)
+	}
+
+	unzipBufferStream(buffer) {
+		return unzipBufferStream(buffer, this.#sourceDir)
+	}
+
+	async rollBackDeleted() {
+		if (this.#backupSuccess !== undefined && this.#backupSuccess) {
+			if (this.#sourceDirExisted) {
+				await this.#rollBackDeleted(this.#backupZipFilePath, this.#sourceDir)
+				return Promise.resolve(1)
+			}
+
+			removeDirSync(this.#sourceDir, true)
+			removeDirSync(path.dirname(this.#backupZipFilePath), true)
+			return Promise.resolve(1)
+		}
+
+		return Promise.resolve(0)
+	}
+
+	#rollBackDeleted() {
+		return unzip(this.#backupZipFilePath, this.#sourceDir)
+			.then(() => removeFileSync(this.#backupZipFilePath))
+	}
 }

@@ -9,6 +9,7 @@ esbuild.build({
 	sourcemap: 'inline',
 	minify: true,
 	metafile: true,
+	external: ['fsevents', 'pm2-deploy'],
 })
 	.then(({metafile}) => console.log(esbuild.analyzeMetafileSync(metafile)))
 	.catch(() => process.exit(1))
