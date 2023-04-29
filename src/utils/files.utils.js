@@ -30,7 +30,7 @@ export const backupFiles = (sourceDir, backupOutFilePath, ignore) => {
 	const archive = archiver('zip', {zlib: {level: 9}})
 
 	return new Promise((resolve, reject) => {
-		archive.glob('**/*', {cwd: sourceDir, ignore})
+		archive.glob('**/*', {cwd: sourceDir, ignore, dot: true})
 
 		archive.on('error', err => reject(err))
 			.on('end', f => f)

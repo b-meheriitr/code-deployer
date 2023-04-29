@@ -16,6 +16,7 @@ export default async (req, res) => {
 			getAppId(req),
 			JSON.parse(req.body.ignoreDelete || '[]'),
 			req.file,
+			{req},
 		)
 		return res.status(201).send()
 	} catch (err) {

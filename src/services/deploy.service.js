@@ -33,7 +33,7 @@ const getBackupFileName = backupOutFilePath => {
 	return path.join(backupOutFilePath, backupName)
 }
 
-export default async function (appId, ignoreDeletePattern, incomingZip) {
+export default async function (appId, ignoreDeletePattern, incomingZip, {req}) {
 	const {dataPath, backupPath, pm2} = await getAppInfo(appId)
 	const backupZipFilePath = getBackupFileName(backupPath)
 
@@ -66,6 +66,10 @@ export default async function (appId, ignoreDeletePattern, incomingZip) {
 			)
 			.catch(f => f)
 
-		throw new RollbackStatusesWithBaseReason(e, rollbackStatuses)
+		/*
+			todo: dont send host/server related infos
+			ex: for script not found error, its sending the absolute app deployment path
+		 */
+		throw new RollbackStatusesWithBaseReason(e.toString(), rollbackStatuses)
 	}
 }

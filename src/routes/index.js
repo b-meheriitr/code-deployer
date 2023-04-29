@@ -15,10 +15,10 @@ router.post('/app/register', wrapErrHandler(async (req, res) => {
 
 	const appPath = path.join(APP_CONFIG.APPS_EXECUTABLE_PATH, appName)
 
-	if (fs.existsSync(appPath)) {
+	if (fs.existsSync(path.join(appPath, 'pm2.json'))) {
 		res.status(422).json({message: `App with name: ${appName} already exists`})
 	} else {
-		createDirectoryRecursiveSync(appPath)
+		createDirectoryRecursiveSync(path.join(appPath, 'deployment'))
 
 		const modifiedAppInfo = {
 			...appInfo,

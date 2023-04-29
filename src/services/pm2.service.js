@@ -56,7 +56,7 @@ function listenForProcessToBeUp(processName) {
 
 			bus.on('process:exception', data => {
 				if (data.process.name === processName) {
-					reject(new Pm2ProcessErrorOnRestart(data))
+					reject(new Pm2ProcessErrorOnRestart(data.data))
 				}
 			})
 
@@ -101,7 +101,7 @@ export class Pm2Service {
 			this.#appliedRestartSuccess = false
 
 			if (e instanceof Pm2ProcessErrorOnRestart) {
-				logger.info('Error in startup, rolling back to previous version', e.message)
+				logger.info(`Error | ${e.message} ) in startup for | ${this.processName} ), rolling back to previous version`)
 			}
 
 			throw e

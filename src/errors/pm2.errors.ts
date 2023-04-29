@@ -8,7 +8,7 @@ export class Pm2ProcessErrorOnRestart extends Error {
 	private pm2ErrData: any
 
 	constructor(pm2ErrData: any) {
-		super()
+		super(pm2ErrData.message)
 		this.pm2ErrData = pm2ErrData
 	}
 }
