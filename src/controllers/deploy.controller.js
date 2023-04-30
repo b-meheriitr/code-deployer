@@ -12,13 +12,13 @@ function getAppId(req) {
 
 export default async (req, res) => {
 	try {
-		await deployService(
+		const data = await deployService(
 			getAppId(req),
 			JSON.parse(req.body.ignoreDelete || '[]'),
 			req.file,
 			{req},
 		)
-		return res.status(201).send()
+		return res.status(201).json(data)
 	} catch (err) {
 		if (err instanceof AppNotFoundError) {
 			return res.status(422)

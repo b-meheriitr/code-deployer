@@ -24,6 +24,8 @@ router.post('/app/register', wrapErrHandler(async (req, res) => {
 			...appInfo,
 			name: appName,
 			cwd: path.join('deployment', appInfo.cwd || ''),
+			// eslint-disable-next-line camelcase
+			exec_mode: 'fork', // todo: to be removed when port allocation features come
 		}
 
 		await fs.promises.writeFile(

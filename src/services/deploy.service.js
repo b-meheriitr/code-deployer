@@ -44,7 +44,7 @@ export default async function (appId, ignoreDeletePattern, incomingZip, {req}) {
 		await fileActionsHelper.backupSource()
 		await fileActionsHelper.deleteSourceDir()
 		await fileActionsHelper.unzipBufferStream(incomingZip.buffer)
-		await pm2Service.pm2Restart(pm2)
+		return (await pm2Service.pm2Restart(pm2))
 	} catch (e) {
 		const rollbackStatuses = []
 

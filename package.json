@@ -72,7 +72,7 @@
     "typescript": "^5.0.3"
   },
   "engines": {
-    "node": "16.X"
+    "node": "18.X"
   },
   "lint-staged": {
     "src/**/*.{js,jsx,ts,css,html}": [
