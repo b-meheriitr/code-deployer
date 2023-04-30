@@ -1,0 +1,19 @@
+[
+  {
+    "script": "./app.min.js",
+    "instances": "max",
+    "env": {
+      "NODE_ENV": "production"
+    },
+    "node_args": [
+      "--enable-source-maps"
+    ],
+    "log_date_format": "DD-MM-YYYY HH:mm:ss.SSS",
+    "max_restarts": 1,
+    "exec_mode": "cluster",
+    "autorestart": true,
+    "restart_delay": 1000,
+    "name": "code-deployer",
+    "cwd": "deployment"
+  }
+]

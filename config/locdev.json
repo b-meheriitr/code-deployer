@@ -3,7 +3,7 @@
     "port": 8011
   },
   "logging": {
-    "override-global-console-methods": false,
+    "override-global-console-methods": true,
     "file-logging": false,
     "file-transport-root-path": "./logs",
     "level": "silly",

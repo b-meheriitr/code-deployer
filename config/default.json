@@ -12,5 +12,9 @@
   },
   "api": {
     "base-path": "/api"
+  },
+  "app": {
+    "backup-path": "/deployments/backups",
+    "apps-executable-path": "/deployments/executables"
   }
 }

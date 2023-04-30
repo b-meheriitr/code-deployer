@@ -1,13 +1,12 @@
 {
+  "server": {
+    "port": "8095"
+  },
   "logging": {
-    "override-global-console-methods": true,
-    "file-logging": true,
-    "file-transport-root-path": "./logs",
-    "level": "silly",
-    "skip-morgan-requests-log": false
+    "file-transport-root-path": "/dev/deployments/logs/code-deployer-dev"
   },
   "app": {
-    "backup-path": ".backups",
-    "apps-executable-path": ".executables"
+    "backup-path": "/dev/deployments/backups",
+    "apps-executable-path": "/dev/deployments/executables"
   }
 }

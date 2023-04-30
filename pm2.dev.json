@@ -1,0 +1,19 @@
+[
+  {
+    "name": "code-deployer-base",
+    "script": "./app.min.js",
+    "instances": 1,
+    "env": {
+      "NODE_ENV": "development"
+    },
+    "node_args": [
+      "--enable-source-maps"
+    ],
+    "log_date_format": "DD-MM-YYYY HH:mm:ss.SSS",
+    "max_restarts": 1,
+    "cwd": "deployment",
+    "exec_mode": "fork",
+    "autorestart": true,
+    "restart_delay": 3000
+  }
+]
