@@ -11,6 +11,9 @@
   },
   "app": {
     "backup-path": ".backups",
-    "apps-executable-path": ".executables"
+    "apps-executable-path": ".executables",
+    "nginx": {
+      "dynamic-confs-dir": "/opt/homebrew/etc/nginx/code-deployer-routes.conf.d"
+    }
   }
 }

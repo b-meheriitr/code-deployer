@@ -15,6 +15,11 @@
   },
   "app": {
     "backup-path": "/deployments/backups",
-    "apps-executable-path": "/deployments/executables"
+    "apps-executable-path": "/deployments/executables",
+    "nginx": {
+      "port": 80,
+      "executable-path": "nginx",
+      "dynamic-confs-dir": "/etc/nginx/code-deployer.conf.d"
+    }
   }
 }

@@ -3,7 +3,7 @@ import {exec} from 'child_process'
 import os from 'os'
 import logger from './loggers'
 
-const runCommand = command => {
+export const runCommand = command => {
 	return new Promise((resolve, reject) => {
 		exec(command, (error, stdout, stderr) => {
 			if (error) {
@@ -107,7 +107,7 @@ export function getPortsFromPid(pid) {
 export async function isProcessListeningOnPort(pid) {
 	const ports = await getPortsFromPid(pid).catch(() => [])
 
-	logger.info(`ports for ${pid}`, ports)
+	logger.debug(`ports for ${pid}`, ports)
 	return ports.length ? ports : false
 }
 

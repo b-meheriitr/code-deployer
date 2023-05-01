@@ -4,7 +4,10 @@ import {APP_CONFIG} from '../config'
 import {AppNotFoundError} from '../errors/errors'
 import {RollbackStatusesWithBaseReason} from '../models/RollbackStatus'
 import {FsActionsHelper} from '../utils/files.utils'
+import logger from '../utils/loggers'
+import {lc} from '../utils/loggers/models.logger'
 import {dateString} from '../utils/utils'
+import NginxUtilService from './nginx.service'
 import {Pm2Service} from './pm2.service'
 
 const getAppInfo = async appId => {
@@ -23,7 +26,7 @@ const getAppInfo = async appId => {
 	return {
 		backupPath: path.join(APP_CONFIG.APPS_BACKUPS_PATH, app.name),
 		dataPath: path.join(APP_CONFIG.APPS_EXECUTABLE_PATH, app.name, 'deployment'),
-		pm2: app,
+		appConfig: app,
 	}
 }
 
@@ -34,18 +37,20 @@ const getBackupFileName = backupOutFilePath => {
 }
 
 export default async function (appId, ignoreDeletePattern, incomingZip, {req}) {
-	const {dataPath, backupPath, pm2} = await getAppInfo(appId)
+	const {dataPath, backupPath, appConfig} = await getAppInfo(appId)
 	const backupZipFilePath = getBackupFileName(backupPath)
 
-	const pm2Service = new Pm2Service(pm2)
+	const pm2Service = new Pm2Service(appConfig)
 	const fileActionsHelper = new FsActionsHelper(dataPath, backupZipFilePath, ignoreDeletePattern)
-
+	let ports
 	try {
 		await fileActionsHelper.backupSource()
 		await fileActionsHelper.deleteSourceDir()
 		await fileActionsHelper.unzipBufferStream(incomingZip.buffer)
-		return (await pm2Service.pm2Restart(pm2))
+		ports = await pm2Service.pm2Restart(appConfig)
 	} catch (e) {
+		logger.error(e, lc({req}))
+
 		const rollbackStatuses = []
 
 		await fileActionsHelper.rollBackDeleted()
@@ -56,7 +61,7 @@ export default async function (appId, ignoreDeletePattern, incomingZip, {req}) {
 					throw err
 				},
 			)
-			.then(() => pm2Service.pm2Rollback(pm2))
+			.then(() => pm2Service.pm2Rollback(appConfig))
 			.then(
 				status => rollbackStatuses.push({for: 'pm2Rollback', status: !!status}),
 				err => {
@@ -71,5 +76,40 @@ export default async function (appId, ignoreDeletePattern, incomingZip, {req}) {
 			ex: for script not found error, its sending the absolute app deployment path
 		 */
 		throw new RollbackStatusesWithBaseReason(e.toString(), rollbackStatuses)
+	}
+
+	if (Array.isArray(ports)) {
+		const nginxService = new NginxUtilService({name: appId})
+		nginxService.setNewPort(ports[0])
+
+		try {
+			return {
+				route: await nginxService.createRoute(),
+				ports,
+			}
+		} catch (e) {
+			logger.error(e, lc({req}))
+
+			const rollbackStatuses = []
+
+			await nginxService.rollBack()
+				.then(
+					status => rollbackStatuses.push({for: 'nginxRollback', status: !!status}),
+					err => {
+						rollbackStatuses.push({for: 'nginxRollback', status: 'error', reason: err})
+						throw err
+					},
+				)
+				.catch(f => f)
+
+			return {
+				message: 'Error in nginx routing',
+				baseReason: e.toString(),
+				rollbackStatuses,
+				ports,
+			}
+		}
+	} else {
+		return ports
 	}
 }

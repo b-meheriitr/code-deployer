@@ -12,6 +12,13 @@ const logger = require('../utils/loggers').default
 const app = require('../app').default
 const {SERVER: {PORT: SERVER_PORT}, ENV} = require('../config').default
 
+function logErrorThenShutDown(errMsg) {
+	logger.error(errMsg)
+	setTimeout(() => {
+		throw new Error(errMsg)
+	}, 500)
+}
+
 /**
  * Get port from environment and store in Express.
  */
@@ -67,10 +74,10 @@ function onError(error) {
 	// handle specific listen errors with friendly messages
 	switch (error.code) {
 		case 'EACCES':
-			logger.error(`${bind} requires elevated privileges`)
+			logErrorThenShutDown(`${bind} requires elevated privileges`)
 			break
 		case 'EADDRINUSE':
-			logger.error(`${bind} is already in use`)
+			logErrorThenShutDown(`${bind} is already in use`)
 			break
 		default:
 			throw error

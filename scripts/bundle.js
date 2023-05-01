@@ -44,6 +44,7 @@ function createPackageJsonFile() {
 				[
 					'name',
 					'engines',
+					'version',
 					...(isBundledDepsAllDeps()
 							? ['dependencies']
 							: bundledDependencies.map(b => (`dependencies.${b}`))

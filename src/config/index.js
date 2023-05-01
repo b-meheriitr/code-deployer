@@ -1,6 +1,11 @@
 import configLibrary from 'config'
+import _ from 'lodash'
 
 const get = configLibrary.get.bind(configLibrary)
+
+export function screamingCaseEachProperty(obj) {
+	return _.mapKeys(obj, (value, key) => _.snakeCase(key).toUpperCase())
+}
 
 const config = {
 	ENV: process.env.NODE_ENV,
@@ -21,6 +26,7 @@ const config = {
 	APP: {
 		APPS_BACKUPS_PATH: `${get('app.backup-path')}`,
 		APPS_EXECUTABLE_PATH: `${get('app.apps-executable-path')}`,
+		NGINX: screamingCaseEachProperty(get('app.nginx')),
 	},
 }
 
