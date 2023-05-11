@@ -1,5 +1,6 @@
 /* eslint-disable no-promise-executor-return */
 import {exec} from 'child_process'
+import detect from 'detect-port'
 import os from 'os'
 import logger from './loggers'
 
@@ -113,27 +114,39 @@ export async function isProcessListeningOnPort(pid) {
 
 export const sleep = timeInMs => new Promise(res => setTimeout(res, timeInMs))
 
-export function waitForProcessToListenOnPortsThenReconfirmItsStillListening(pid, waitTimeToConfirm) {
-	const {processOnPortNotificationPromise, resolveProcessUpOnPort} = (() => {
+export function isPortListening(port) {
+	return detect(port)
+		.then(_port => _port !== port)
+		.then(listening => {
+			logger.info(`${port} ${listening ? '' : 'not'} listening`)
+			return listening
+		})
+}
+
+export const getNextAvailablePort = port => detect(port)
+
+export function waitForPortToListenThenReconfirmItsStillListening(port, waitTimeToConfirm) {
+	const {portListeningNotificationPromise, resolvePortListening} = (() => {
 		let res
 		const promise = new Promise(rs => res = rs)
 
-		return {resolveProcessUpOnPort: res, processOnPortNotificationPromise: promise}
+		return {resolvePortListening: res, portListeningNotificationPromise: promise}
 	})()
 
 	const portsPollerId = setInterval(async () => {
-		if (await isProcessListeningOnPort(pid)) {
-			resolveProcessUpOnPort()
+		if (await isPortListening(port)) {
+			resolvePortListening()
 		}
 	}, 500)
 
 	return [
-		processOnPortNotificationPromise
-			.then(dataOrCancel => {
+		portListeningNotificationPromise
+			.then(isCancel => {
 				clearInterval(portsPollerId)
-				return dataOrCancel !== 'CANCELLED' && sleep(waitTimeToConfirm)
-					.then(() => isProcessListeningOnPort(pid))
+				return isCancel
+					|| sleep(waitTimeToConfirm)
+						.then(() => isPortListening(port))
 			}),
-		() => resolveProcessUpOnPort('CANCELLED'),
+		() => resolvePortListening('CANCELLED'),
 	]
 }

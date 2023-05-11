@@ -8,5 +8,8 @@
   "app": {
     "backup-path": "/dev/deployments/backups",
     "apps-executable-path": "/dev/deployments/executables"
+  },
+  "databases": {
+    "default": "mssql"
   }
 }

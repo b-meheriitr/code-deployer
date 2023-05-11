@@ -1,7 +1,11 @@
+import fs from 'fs'
+import path from 'path'
 import pm2 from 'pm2'
+import {APP_CONFIG} from '../config'
+import {AppNotFoundError} from '../errors/errors'
 import {Pm2ProcessErrorOnRestart, Pm2ProcessNotFoundError, Pm2ProcessNotFoundErrorBy} from '../errors/pm2.errors'
 import logger from '../utils/loggers'
-import {sleep, waitForProcessToListenOnPortsThenReconfirmItsStillListening} from '../utils/os.utils'
+import {sleep, waitForPortToListenThenReconfirmItsStillListening} from '../utils/os.utils'
 
 const promisifyCallBack = (resolve, reject) => {
 	return (err, data) => {
@@ -59,29 +63,43 @@ async function listenForProcessToBeUp(processName) {
 	return findProcess(processName)
 		.then(process => {
 			return new Promise((resolve, reject) => {
+				const {
+					MAX_AWAITABLE_TIME_TO_SERVER_UP_TIME_SECS: maxAwaitableTimeToServerUpTimeSecs = 20,
+					SERVER_PORT,
+				} = process.pm2_env.env
+
+				const waitTimeToConfirmInSes = 1
+				const [p1, cancelP1] = waitForPortToListenThenReconfirmItsStillListening(
+					SERVER_PORT,
+					waitTimeToConfirmInSes,
+				)
+
+				sleep(maxAwaitableTimeToServerUpTimeSecs * 1000)
+					.then(cancelP1)
+
 				bus.on('process:exception', data => {
 					if (data.process.name === processName) {
+						cancelP1()
 						reject(new Pm2ProcessErrorOnRestart(data.data))
 					}
 				})
 
-				const [p1, cancelP1] = waitForProcessToListenOnPortsThenReconfirmItsStillListening(
-					process.pid,
-					1000,
-				)
+				p1.then(isListening => {
+					if (typeof isListening === 'string') {
+						return resolve(new Pm2ProcessErrorOnRestart(
+							`Server did not up in ${maxAwaitableTimeToServerUpTimeSecs} seconds`,
+						))
+					}
 
-				const maxAwaitableTimeToServerUpTimeSecs = process.pm2_env.env.MAX_AWAITABLE_TIME_TO_SERVER_UP_TIME_SECS || 20
-
-				p1.then(ports => ports && resolve(ports))
-				sleep(maxAwaitableTimeToServerUpTimeSecs * 1000).then(() => {
-					resolve(new Pm2ProcessErrorOnRestart(
-						`Server did not up in ${maxAwaitableTimeToServerUpTimeSecs} seconds`,
-					))
-					cancelP1()
+					return isListening
+						? resolve(true)
+						: resolve(new Pm2ProcessErrorOnRestart(
+							`Server stopped listening after ${waitTimeToConfirmInSes} sec`,
+						))
 				})
 			})
+				.finally(() => bus.close())
 		})
-		.finally(() => bus.close())
 }
 
 export function deleteProcess(processName) {
@@ -112,9 +130,9 @@ export class Pm2Service {
 	async pm2Restart() {
 		try {
 			return await this.#restartProcess(true)
-				.then(ports => {
+				.then(port => {
 					this.#appliedRestartSuccess = true
-					return ports
+					return port
 				})
 		} catch (e) {
 			this.#appliedRestartSuccess = false
@@ -127,6 +145,8 @@ export class Pm2Service {
 		}
 	}
 
+	willRestartOnRollback = async () => (this.#appliedRestartSuccess !== undefined) && (!await this.isNewProcess())
+
 	async pm2Rollback() {
 		if (this.#appliedRestartSuccess !== undefined) {
 			if (await this.isNewProcess() /** && await this.#processExists() /** why this hangs when called here? * */) {
@@ -138,8 +158,7 @@ export class Pm2Service {
 					})
 				return Promise.resolve(1)
 			}
-			await this.#restartProcess(this.processName)
-			return Promise.resolve(1)
+			return this.#restartProcess(this.processName)
 		}
 
 		return Promise.resolve(0)
@@ -150,7 +169,7 @@ export class Pm2Service {
 			if (startIfNotExists && await this.isNewProcess()) {
 				await start(this.config)
 			} else {
-				await reStart(this.processName)
+				await start(this.config)
 			}
 
 			return listenForProcessToBeUp(this.processName)
@@ -165,4 +184,23 @@ export class Pm2Service {
 				throw e
 			})
 	}
+}
+
+export const getAppPm2Path = appId => path.join(APP_CONFIG.APPS_EXECUTABLE_PATH, appId, 'pm2.json')
+
+export const getPm2FileConfig = async appId => {
+	const appPm2Path = getAppPm2Path(appId)
+
+	if (!fs.existsSync(appPm2Path)) {
+		throw new AppNotFoundError(appId)
+	}
+
+	return JSON.parse(await fs.promises.readFile(appPm2Path, 'utf-8'))
+}
+
+export const writeNewEnvConfigToPm2 = async (appId, newEnv) => {
+	const pm2Config = await getPm2FileConfig(appId)
+	pm2Config[0].env = newEnv
+
+	fs.writeFileSync(getAppPm2Path(appId), JSON.stringify(pm2Config, null, 2))
 }

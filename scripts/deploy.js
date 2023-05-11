@@ -29,6 +29,10 @@ const CONFIG = {
 			pattern: '.env*',
 			cwd: './',
 		},
+		{
+			pattern: '*.sql',
+			cwd: 'src/repo/migration',
+		},
 	],
 }
 

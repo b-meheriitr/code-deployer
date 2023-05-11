@@ -20,6 +20,29 @@
       "port": 80,
       "executable-path": "nginx",
       "dynamic-confs-dir": "/etc/nginx/code-deployer.conf.d"
-    }
+    },
+    "assignablePortsRange": [
+      15000,
+      25000
+    ]
+  },
+  "databases": {
+    "sqlite": {
+      "dialect": "sqlite",
+      "storage": "data/db.sqlite"
+    },
+    "mssql": {
+      "dialect": "mssql",
+      "database": "Test",
+      "username": "Resqdb",
+      "password": "resqdb@123",
+      "host": "10.21.54.92",
+      "define": {
+        "schema": "code-deployer"
+      },
+      "timezone": "+05:30"
+    },
+    "logging": false,
+    "default": "sqlite"
   }
 }

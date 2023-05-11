@@ -1,5 +1,6 @@
 import configLibrary from 'config'
 import _ from 'lodash'
+import os from 'os'
 
 const get = configLibrary.get.bind(configLibrary)
 
@@ -12,6 +13,7 @@ const config = {
 	SERVER: {
 		PORT: get('server.port'),
 		NAME: get('server.name'),
+		HOST_NAME: os.hostname(),
 	},
 	LOGGING: {
 		OVERRIDE_GLOBAL_CONSOLE_METHODS: get('logging.override-global-console-methods'),
@@ -27,7 +29,9 @@ const config = {
 		APPS_BACKUPS_PATH: `${get('app.backup-path')}`,
 		APPS_EXECUTABLE_PATH: `${get('app.apps-executable-path')}`,
 		NGINX: screamingCaseEachProperty(get('app.nginx')),
+		ASSIGNABLE_PORTS_RANGE: get('app.assignablePortsRange'),
 	},
+	DATABASES: get('databases'),
 }
 
 export default config
@@ -36,6 +40,7 @@ export const SERVER_CONFIG = config.SERVER
 export const LOGGING_CONFIG = config.LOGGING
 export const API_CONFIG = config.API
 export const APP_CONFIG = config.APP
+export const DATABASES_CONFIG = config.DATABASES
 
 /*
 	Can't use localDevEnv NODE_ENV name as 'local' or 'local-development' while devEnv NODE_ENV name as 'development'
