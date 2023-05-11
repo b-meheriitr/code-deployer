@@ -4,6 +4,7 @@ import {RollbackStatusesWithBaseReason} from '../models/RollbackStatus'
 import {FsActionsHelper} from '../utils/files.utils'
 import logger from '../utils/loggers'
 import {lc} from '../utils/loggers/models.logger'
+import {isWindowsOs} from '../utils/os.utils'
 import {dateString} from '../utils/utils'
 import EnvConfigSetterService from './envConfigSetter.service'
 import NginxUtilService from './nginx.service'
@@ -72,6 +73,9 @@ export default async function (appId, ignoreDeletePattern, incomingZip, {req}) {
 	const envConfigSetterService = new EnvConfigSetterService(appConfig, appId)
 	let availablePort
 	try {
+		if (isWindowsOs()) {
+			await pm2Service.stop()
+		}
 		await fileActionsHelper.backupSource()
 		await fileActionsHelper.deleteSourceDir()
 		await fileActionsHelper.unzipBufferStream(incomingZip.buffer)

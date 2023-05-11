@@ -55,6 +55,12 @@ export function reStart(processName) {
 	})
 }
 
+export function stop(processName) {
+	return new Promise((resolve, reject) => {
+		pm2.stop(processName, promisifyCallBack(resolve, reject))
+	})
+}
+
 async function listenForProcessToBeUp(processName) {
 	const bus = await new Promise((resolve, reject) => {
 		pm2.launchBus(promisifyCallBack(resolve, reject))
@@ -115,6 +121,8 @@ export class Pm2Service {
 
 	#appliedRestartSuccess
 
+	#stoppedProcessBeforeRestart
+
 	constructor(config) {
 		this.processName = config.name
 		this.config = config
@@ -124,6 +132,18 @@ export class Pm2Service {
 				this.#newProcess = !(await this.#processExists())
 			}
 			return this.#newProcess
+		}
+	}
+
+	async stop() {
+		if (!await this.isNewProcess()) {
+			try {
+				await stop(this.processName)
+				this.#stoppedProcessBeforeRestart = true
+			} catch (e) {
+				this.#stoppedProcessBeforeRestart = false
+				throw e
+			}
 		}
 	}
 
@@ -148,7 +168,7 @@ export class Pm2Service {
 	willRestartOnRollback = async () => (this.#appliedRestartSuccess !== undefined) && (!await this.isNewProcess())
 
 	async pm2Rollback() {
-		if (this.#appliedRestartSuccess !== undefined) {
+		if (this.#appliedRestartSuccess !== undefined || this.#stoppedProcessBeforeRestart !== undefined) {
 			if (await this.isNewProcess() /** && await this.#processExists() /** why this hangs when called here? * */) {
 				await deleteProcess(this.processName)
 					.catch(err => {

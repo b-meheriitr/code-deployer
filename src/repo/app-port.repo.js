@@ -8,6 +8,10 @@ class AppPortRepo {
 		return this.AppPort.findOne({where}, opts)
 	}
 
+	findAll = (opts = {}) => {
+		return this.AppPort.findAll(opts)
+	}
+
 	insert = (record, opts = {}) => {
 		return this.AppPort.create(record, opts)
 	}

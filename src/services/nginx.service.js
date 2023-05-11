@@ -1,7 +1,7 @@
 import {promises as fs} from 'fs'
 import path from 'path'
 import {APP_CONFIG} from '../config'
-import {runCommand} from '../utils/os.utils'
+import {isWindowsOs, runCommand} from '../utils/os.utils'
 
 const NGINX_CONF = APP_CONFIG.NGINX
 
@@ -30,7 +30,10 @@ export default class NginxUtil {
 	// eslint-disable-next-line class-methods-use-this
 	#reloadNginx() {
 		const nginxExecPath = NGINX_CONF.EXECUTABLE_PATH || 'nginx'
-		return runCommand(`${nginxExecPath} -s reload`)
+		return runCommand(
+			`${nginxExecPath} -s reload`,
+			isWindowsOs() ? path.dirname(NGINX_CONF.EXECUTABLE_PATH) : undefined,
+		)
 	}
 
 	async createRoute() {

@@ -2,13 +2,23 @@ import {Router} from 'express'
 import fs from 'fs'
 import path from 'path'
 import {APP_CONFIG} from '../config'
+import * as appPortService from '../services/app-port.service'
 import {wrapErrHandler} from '../utils/controllerUtils'
 import {createDirectoryRecursiveSync} from '../utils/files.utils'
+import {getNextAvailablePort} from '../utils/os.utils'
 import deployRoute from './deploy.route'
 
 const router = Router()
 
 router.use('/deploy', deployRoute)
+
+router.get('/next-available-port/:port', async (req, res) => {
+	res.status(200).json(await getNextAvailablePort(+req.params.port))
+})
+
+router.get('/all-app-ports', async (req, res) => {
+	res.status(200).json(await appPortService.getAllRecords())
+})
 
 router.post('/app/register', wrapErrHandler(async (req, res) => {
 	const {name: appName, info: appInfo} = req.body

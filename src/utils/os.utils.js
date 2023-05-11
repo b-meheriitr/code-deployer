@@ -4,9 +4,9 @@ import detect from 'detect-port'
 import os from 'os'
 import logger from './loggers'
 
-export const runCommand = command => {
+export const runCommand = (command, cwd) => {
 	return new Promise((resolve, reject) => {
-		exec(command, (error, stdout, stderr) => {
+		exec(command, {cwd}, (error, stdout, stderr) => {
 			if (error) {
 				reject(error)
 			}
@@ -88,15 +88,17 @@ class Win32PortFinder extends PortsFinder {
 	}
 }
 
-export function getPortsFromPid(pid) {
-	const osPlatform = os.platform()
+export const osPlatform = os.platform()
 
+export const isWindowsOs = () => osPlatform === 'win32'
+
+export function getPortsFromPid(pid) {
 	let finder
 	if (osPlatform === 'linux') {
 		finder = new UnixPortFinder(pid)
 	} else if (osPlatform === 'darwin') {
 		finder = new MacPortFinder(pid)
-	} else if (osPlatform === 'win32') {
+	} else if (isWindowsOs()) {
 		finder = new Win32PortFinder(pid)
 	} else {
 		throw new Error(`Unsupported OS : ${osPlatform}`)
@@ -114,16 +116,16 @@ export async function isProcessListeningOnPort(pid) {
 
 export const sleep = timeInMs => new Promise(res => setTimeout(res, timeInMs))
 
+export const getNextAvailablePort = port => detect(port)
+
 export function isPortListening(port) {
-	return detect(port)
+	return getNextAvailablePort(port)
 		.then(_port => _port !== port)
 		.then(listening => {
 			logger.info(`${port} ${listening ? '' : 'not'} listening`)
 			return listening
 		})
 }
-
-export const getNextAvailablePort = port => detect(port)
 
 export function waitForPortToListenThenReconfirmItsStillListening(port, waitTimeToConfirm) {
 	const {portListeningNotificationPromise, resolvePortListening} = (() => {

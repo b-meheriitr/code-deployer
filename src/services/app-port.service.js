@@ -23,6 +23,8 @@ export function upsert(port, appId) {
 		})
 }
 
+export const getAllRecords = () => appPortRepo.findAll()
+
 export const getAnAvailablePortGuess = () => appPortRepo.getPortMax(HOST_NAME).then(max => max || undefined)
 
 export class AppPortService {
