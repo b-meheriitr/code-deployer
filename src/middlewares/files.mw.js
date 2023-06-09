@@ -1,5 +1,5 @@
 import multer from 'multer'
-import {verifyIncomingZipBuffer} from '../utils/files.utils'
+import {isArchive, verifyIncomingZipBuffer} from '../utils/files.utils'
 
 export function formDataFileToBufferMw() {
 	const upload = multer({
@@ -12,7 +12,9 @@ export function formDataFileToBufferMw() {
 
 export function verifyIncomingZip(req, res, next) {
 	try {
-		verifyIncomingZipBuffer(req.file.buffer)
+		if (isArchive(req.file.originalname)) {
+			verifyIncomingZipBuffer(req.file.buffer)
+		}
 		next()
 	} catch (err) {
 		next(err)

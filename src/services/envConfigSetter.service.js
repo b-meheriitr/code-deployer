@@ -1,9 +1,10 @@
 import _ from 'lodash'
+import path from 'path'
 import {APP_CONFIG} from '../config'
 import logger from '../utils/loggers'
 import {getNextAvailablePort} from '../utils/os.utils'
 import {AppPortService} from './app-port.service'
-import {writeNewEnvConfigToPm2} from './pm2.service'
+import {isServerLess, writeNewEnvConfigToPm2} from './pm2.service'
 
 const {ASSIGNABLE_PORTS_RANGE} = APP_CONFIG
 
@@ -29,24 +30,25 @@ export default class EnvConfigSetterService {
 
 	execute = async action => {
 		try {
-			const availablePort = await this.#registerAnAvailablePort()
-				.then(
-					port => {
-						this.#registeredNewPort = true
-						return port
-					},
-					err => {
-						this.#registeredNewPort = false
-						throw err
-					},
-				)
+			const availablePort = isServerLess(this.appConfig)
+				? undefined
+				: await this.#registerAnAvailablePort()
+					.then(
+						port => {
+							this.#registeredNewPort = true
+							return port
+						},
+						err => {
+							this.#registeredNewPort = false
+							throw err
+						},
+					)
 
-			this.appConfig.env = {
-				...this.appConfig.env,
-				PORT: availablePort,
-				SERVER_PORT: availablePort,
-				NODE_CONFIG: JSON.stringify({server: {port: availablePort}}),
-			}
+			const contentRoot = isServerLess(this.appConfig)
+				? path.resolve(this.appConfig.cwd)
+				: undefined
+
+			this.#setEnvVariables({availablePort, contentRoot})
 
 			const actionResult = await action()
 
@@ -64,7 +66,7 @@ export default class EnvConfigSetterService {
 
 			return {
 				actionResult,
-				serverPort: availablePort,
+				serverPort: availablePort || contentRoot,
 			}
 		} catch (e) {
 			this.#executeSuccessFul = false
@@ -112,5 +114,27 @@ export default class EnvConfigSetterService {
 		} while (port !== portRMin && portsCheckedCount < maxPortToChecksCount)
 
 		throw new Error(`No port is available in range [${portRMin}, ${portRMax}]`)
+	}
+
+	#setEnvVariables = config => {
+		let newVariables
+
+		// eslint-disable-next-line no-underscore-dangle
+		if (this.appConfig._info?.type === 'reactjs') {
+			newVariables = {
+				CONTENT_ROOT: config.contentRoot,
+			}
+		} else {
+			newVariables = {
+				PORT: config.availablePort,
+				SERVER_PORT: config.availablePort,
+				NODE_CONFIG: JSON.stringify({server: {port: config.availablePort}}),
+			}
+		}
+
+		this.appConfig.env = {
+			...this.appConfig.env,
+			...newVariables,
+		}
 	}
 }

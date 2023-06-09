@@ -5,6 +5,10 @@ import minimatch from 'minimatch'
 import path from 'path'
 import {CorruptedIncomingZipError, SourceBackupDirNotExistErr} from '../errors/errors'
 
+export function isArchive(fileName) {
+	return /\.(zip)$/.test(fileName)
+}
+
 const removeFileSync = filePath => fs.rmSync(filePath)
 
 const removeDirSync = (innerDirPath, recursive = false) => {
@@ -197,6 +201,15 @@ export class FsActionsHelper {
 
 	unzipBufferStream(buffer) {
 		return unzipBufferStream(buffer, this.#sourceDir)
+	}
+
+	writeBufferContent(buffer, fileName) {
+		createDirectoryRecursiveSync(this.#sourceDir)
+
+		return fs.promises.writeFile(
+			path.join(this.#sourceDir, fileName),
+			buffer,
+		)
 	}
 
 	async rollBackDeleted() {

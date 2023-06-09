@@ -21,7 +21,7 @@ router.get('/all-app-ports', async (req, res) => {
 })
 
 router.post('/app/register', wrapErrHandler(async (req, res) => {
-	const {name: appName, info: appInfo} = req.body
+	const {name: appName, info: appInfo, ..._otherInfo} = req.body
 
 	const appPath = path.join(APP_CONFIG.APPS_EXECUTABLE_PATH, appName)
 
@@ -34,6 +34,7 @@ router.post('/app/register', wrapErrHandler(async (req, res) => {
 			...appInfo,
 			name: appName,
 			cwd: path.join('deployment', appInfo.cwd || ''),
+			_info: _otherInfo,
 		}
 
 		await fs.promises.writeFile(

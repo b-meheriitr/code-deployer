@@ -6,8 +6,15 @@ import {isWindowsOs, runCommand} from '../utils/os.utils'
 const NGINX_CONF = APP_CONFIG.NGINX
 
 const buildConfigContent = config => {
+	if (config.target.path) {
+		return `location /${config.path} {    
+                    alias ${config.target.path};
+                    try_files $uri $uri/ /index.html =404;    
+                }\n`
+	}
+
 	return `location /${config.path}/ {
-				proxy_pass http://localhost:${config.targetPort}/;
+				proxy_pass http://localhost:${config.target.port}/;
 			}\n`
 }
 
@@ -39,7 +46,10 @@ export default class NginxUtil {
 	async createRoute() {
 		const {app} = this
 		const newRoutePath = `${app.name}`
-		const newConfigContent = buildConfigContent({path: newRoutePath, targetPort: app.port})
+		const newConfigContent = buildConfigContent({
+			path: newRoutePath,
+			target: {port: app.port, path: app.targetRootPath},
+		})
 
 		try {
 			await fs.mkdir(path.dirname(this.#configFilePath), {recursive: true})
@@ -80,8 +90,14 @@ export default class NginxUtil {
 		}
 	}
 
-	setNewPort(newPort) {
-		this.app.port = newPort
+	setNewTargetPortOrPath(targetPortOrPath) {
+		if (typeof targetPortOrPath === 'number') {
+			this.app.port = targetPortOrPath
+			return {port: targetPortOrPath}
+		}
+
+		this.app.targetRootPath = targetPortOrPath
+		return {}
 	}
 
 	async rollBack() {

@@ -147,7 +147,7 @@ export class Pm2Service {
 		}
 	}
 
-	async pm2Restart() {
+	async restart() {
 		try {
 			return await this.#restartProcess(true)
 				.then(port => {
@@ -167,7 +167,7 @@ export class Pm2Service {
 
 	willRestartOnRollback = async () => (this.#appliedRestartSuccess !== undefined) && (!await this.isNewProcess())
 
-	async pm2Rollback() {
+	async rollback() {
 		if (this.#appliedRestartSuccess !== undefined || this.#stoppedProcessBeforeRestart !== undefined) {
 			if (await this.isNewProcess() /** && await this.#processExists() /** why this hangs when called here? * */) {
 				await deleteProcess(this.processName)
@@ -204,6 +204,36 @@ export class Pm2Service {
 				throw e
 			})
 	}
+}
+
+class ServerLessPm2Service {
+	constructor(config) {
+		this.config = config
+	}
+
+	// eslint-disable-next-line class-methods-use-this
+	stop = () => Promise.resolve(true)
+
+	// eslint-disable-next-line class-methods-use-this
+	restart = () => Promise.resolve(true)
+
+	// eslint-disable-next-line class-methods-use-this
+	willRestartOnRollback = () => Promise.resolve(false)
+
+	// eslint-disable-next-line class-methods-use-this
+	rollback = () => Promise.resolve(true)
+}
+
+export function isServerLess(appConfig) {
+	// eslint-disable-next-line no-underscore-dangle
+	return ['reactjs'].includes(appConfig._info?.type)
+}
+
+export function getPm2Service(appConfig) {
+	if (isServerLess(appConfig)) {
+		return new ServerLessPm2Service(appConfig)
+	}
+	return new Pm2Service(appConfig)
 }
 
 export const getAppPm2Path = appId => path.join(APP_CONFIG.APPS_EXECUTABLE_PATH, appId, 'pm2.json')

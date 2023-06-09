@@ -1,14 +1,14 @@
 import path from 'path'
 import {APP_CONFIG} from '../config'
 import {RollbackStatusesWithBaseReason} from '../models/RollbackStatus'
-import {FsActionsHelper} from '../utils/files.utils'
+import {FsActionsHelper, isArchive} from '../utils/files.utils'
 import logger from '../utils/loggers'
 import {lc} from '../utils/loggers/models.logger'
 import {isWindowsOs} from '../utils/os.utils'
 import {dateString} from '../utils/utils'
 import EnvConfigSetterService from './envConfigSetter.service'
 import NginxUtilService from './nginx.service'
-import {getPm2FileConfig, Pm2Service} from './pm2.service'
+import {getPm2FileConfig, getPm2Service} from './pm2.service'
 
 const getAppInfo = async appId => {
 	let app = (await getPm2FileConfig(appId))[0]
@@ -31,14 +31,14 @@ const getBackupFileName = backupOutFilePath => {
 	return path.join(backupOutFilePath, backupName)
 }
 
-async function setNginxRoute(availablePort, appId, {req}) {
+async function setNginxRoute(targetPortOrPath, appId, {req}) {
 	const nginxService = new NginxUtilService({name: appId})
-	nginxService.setNewPort(availablePort)
+	const {port} = nginxService.setNewTargetPortOrPath(targetPortOrPath)
 
 	try {
 		return {
 			route: await nginxService.createRoute(),
-			port: availablePort,
+			port,
 		}
 	} catch (e) {
 		logger.error(e, lc({req}))
@@ -59,16 +59,16 @@ async function setNginxRoute(availablePort, appId, {req}) {
 			message: 'Error in nginx routing',
 			baseReason: e.toString(),
 			rollbackStatuses,
-			postRollbackInfo: {port: availablePort},
+			postRollbackInfo: port,
 		}
 	}
 }
 
-export default async function (appId, ignoreDeletePattern, incomingZip, {req}) {
+export default async function (appId, ignoreDeletePattern, incomingFile, {req}) {
 	const {dataPath, backupPath, appConfig} = await getAppInfo(appId)
 	const backupZipFilePath = getBackupFileName(backupPath)
 
-	const pm2Service = new Pm2Service(appConfig)
+	const pm2Service = getPm2Service(appConfig)
 	const fileActionsHelper = new FsActionsHelper(dataPath, backupZipFilePath, ignoreDeletePattern)
 	const envConfigSetterService = new EnvConfigSetterService(appConfig, appId)
 	let availablePort
@@ -78,8 +78,13 @@ export default async function (appId, ignoreDeletePattern, incomingZip, {req}) {
 		}
 		await fileActionsHelper.backupSource()
 		await fileActionsHelper.deleteSourceDir()
-		await fileActionsHelper.unzipBufferStream(incomingZip.buffer)
-		const {actionResult, serverPort} = await envConfigSetterService.execute(() => pm2Service.pm2Restart())
+		if (isArchive(incomingFile.originalname)) {
+			await fileActionsHelper.unzipBufferStream(incomingFile.buffer)
+		} else {
+			appConfig.script = incomingFile.originalname
+			await fileActionsHelper.writeBufferContent(incomingFile.buffer, incomingFile.originalname)
+		}
+		const {actionResult, serverPort} = await envConfigSetterService.execute(() => pm2Service.restart())
 
 		if (actionResult !== true) {
 			return actionResult
@@ -114,7 +119,7 @@ export default async function (appId, ignoreDeletePattern, incomingZip, {req}) {
 						serverPort,
 						actionResult: status,
 					} = await new EnvConfigSetterService(appConfig, appId)
-						.execute(() => pm2Service.pm2Rollback())
+						.execute(() => pm2Service.rollback())
 
 					return {
 						status,
@@ -124,7 +129,7 @@ export default async function (appId, ignoreDeletePattern, incomingZip, {req}) {
 					}
 				}
 
-				return {status: await pm2Service.pm2Rollback()}
+				return {status: await pm2Service.rollback()}
 			})
 			.then(
 				({status, postRollbackInfo: _postRollbackInfo}) => {

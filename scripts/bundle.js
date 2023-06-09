@@ -7,7 +7,7 @@ import path from 'path'
 import projectPackageJson from '../package.json'
 
 const packagesInstallationPath = 'dist/bundle'
-const bundledDependencies = ['fsevents', 'pm2-deploy', 'pg-hstore', 'sqlite3', 'tedious']
+const bundledDependencies = ['fsevents', 'pm2-deploy', 'pg-hstore', 'sqlite3', 'tedious', 'mysql2']
 
 function isBundledDepsAllDeps() {
 	return bundledDependencies === '*' || bundledDependencies[0] === '*'
