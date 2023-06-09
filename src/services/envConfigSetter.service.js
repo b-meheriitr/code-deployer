@@ -83,14 +83,16 @@ export default class EnvConfigSetterService {
 	}
 
 	#registerAnAvailablePort = async (availablePortGuess = ASSIGNABLE_PORTS_RANGE[0]) => {
-		const [portRMin, portRMax] = ASSIGNABLE_PORTS_RANGE
+		let [portRMin] = ASSIGNABLE_PORTS_RANGE
+		const [, portRMax] = ASSIGNABLE_PORTS_RANGE
 
-		const maxPortToChecksCount = portRMax - portRMin - 1
+		const maxPortToChecksCount = portRMax - portRMin + 1
 		let portsCheckedCount = 0
 		let port = availablePortGuess
 		do {
 			if (port < portRMin || portRMax < port) {
-				port = portRMin
+				// eslint-disable-next-line no-plusplus
+				port = ++portRMin
 			}
 
 			// eslint-disable-next-line no-await-in-loop

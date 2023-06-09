@@ -86,7 +86,9 @@ export default class NginxUtil {
 
 	async rollBack() {
 		if (this.#writeNewConfigSuccess !== undefined) {
-			if (this.#oldConfigContent !== undefined) {
+			if (this.#oldConfigContent === undefined) {
+				await fs.rm(this.#configFilePath)
+			} else {
 				await fs.writeFile(this.#configFilePath, this.#oldConfigContent)
 			}
 		}
