@@ -11,11 +11,17 @@ CREATE TABLE IF NOT EXISTS "app-port"
     CONSTRAINT idx_unique_columns_hostName_port UNIQUE (hostName, port)
 );
 
-CREATE TABLE IF NOT EXISTS main.sqlite_master
+CREATE TABLE IF NOT EXISTS main."app"
 (
-    type     TEXT,
-    name     TEXT,
-    tbl_name TEXT,
-    rootpage INT,
-    sql      TEXT
+    id              TEXT NOT NULL
+        PRIMARY KEY,
+    appName         TEXT NOT NULL,
+    package         TEXT,
+    appAbsolutePath TEXT NOT NULL,
+    backupPath      TEXT NOT NULL,
+    dataPath        TEXT NOT NULL,
+    nginxRoutePath  TEXT NOT NULL
+        UNIQUE,
+    createdOn       DATETIME,
+    updatedOn       DATETIME
 );

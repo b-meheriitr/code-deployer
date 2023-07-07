@@ -1,11 +1,11 @@
 import fs from 'fs'
 import path from 'path'
 import pm2 from 'pm2'
-import {APP_CONFIG} from '../config'
 import {AppNotFoundError} from '../errors/errors'
 import {Pm2ProcessErrorOnRestart, Pm2ProcessNotFoundError, Pm2ProcessNotFoundErrorBy} from '../errors/pm2.errors'
 import logger from '../utils/loggers'
 import {sleep, waitForPortToListenThenReconfirmItsStillListening} from '../utils/os.utils'
+import * as appService from './app.service'
 
 const promisifyCallBack = (resolve, reject) => {
 	return (err, data) => {
@@ -236,10 +236,14 @@ export function getPm2Service(appConfig) {
 	return new Pm2Service(appConfig)
 }
 
-export const getAppPm2Path = appId => path.join(APP_CONFIG.APPS_EXECUTABLE_PATH, appId, 'pm2.json')
+export const getAppPm2Path = async appId => {
+	const appFromRepo = await appService.getByAppId(appId)
+
+	return path.join(appFromRepo.appAbsolutePath, 'pm2.json')
+}
 
 export const getPm2FileConfig = async appId => {
-	const appPm2Path = getAppPm2Path(appId)
+	const appPm2Path = await getAppPm2Path(appId)
 
 	if (!fs.existsSync(appPm2Path)) {
 		throw new AppNotFoundError(appId)
@@ -252,5 +256,5 @@ export const writeNewEnvConfigToPm2 = async (appId, newEnv) => {
 	const pm2Config = await getPm2FileConfig(appId)
 	pm2Config[0].env = newEnv
 
-	fs.writeFileSync(getAppPm2Path(appId), JSON.stringify(pm2Config, null, 2))
+	fs.writeFileSync(await getAppPm2Path(appId), JSON.stringify(pm2Config, null, 2))
 }

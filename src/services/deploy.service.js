@@ -1,27 +1,29 @@
 import path from 'path'
-import {APP_CONFIG} from '../config'
 import {RollbackStatusesWithBaseReason} from '../models/RollbackStatus'
 import {FsActionsHelper, isArchive} from '../utils/files.utils'
 import logger from '../utils/loggers'
 import {lc} from '../utils/loggers/models.logger'
 import {isWindowsOs} from '../utils/os.utils'
 import {dateString} from '../utils/utils'
+import * as appService from './app.service'
 import EnvConfigSetterService from './envConfigSetter.service'
 import NginxUtilService from './nginx.service'
 import {getPm2FileConfig, getPm2Service} from './pm2.service'
 
 const getAppInfo = async appId => {
+	const appFromRepo = await appService.getByAppId(appId)
+
 	let app = (await getPm2FileConfig(appId))[0]
 
 	app = {
 		...app,
-		cwd: path.join(APP_CONFIG.APPS_EXECUTABLE_PATH, appId, app.cwd),
+		cwd: path.join(appFromRepo.appAbsolutePath, app.cwd),
 	}
 
 	return {
-		backupPath: path.join(APP_CONFIG.APPS_BACKUPS_PATH, app.name),
-		dataPath: path.join(APP_CONFIG.APPS_EXECUTABLE_PATH, app.name, 'deployment'),
-		appConfig: app,
+		backupPath: appFromRepo.backupPath,
+		dataPath: path.join(appFromRepo.appAbsolutePath, 'deployment'),
+		appConfig: {...appFromRepo, ...app},
 	}
 }
 
@@ -31,8 +33,8 @@ const getBackupFileName = backupOutFilePath => {
 	return path.join(backupOutFilePath, backupName)
 }
 
-async function setNginxRoute(targetPortOrPath, appId, {req}) {
-	const nginxService = new NginxUtilService({name: appId})
+async function setNginxRoute(targetPortOrPath, app, {req}) {
+	const nginxService = new NginxUtilService(app)
 	const {port} = nginxService.setNewTargetPortOrPath(targetPortOrPath)
 
 	try {
@@ -124,7 +126,7 @@ export default async function (appId, ignoreDeletePattern, incomingFile, {req}) 
 					return {
 						status,
 						postRollbackInfo: status === true
-							? await setNginxRoute(serverPort, appId, {req})
+							? await setNginxRoute(serverPort, appConfig, {req})
 							: status,
 					}
 				}
@@ -153,5 +155,5 @@ export default async function (appId, ignoreDeletePattern, incomingFile, {req}) 
 		throw new RollbackStatusesWithBaseReason(e.toString(), rollbackStatuses, postRollbackInfo)
 	}
 
-	return setNginxRoute(availablePort, appId, {req})
+	return setNginxRoute(availablePort, appConfig, {req})
 }

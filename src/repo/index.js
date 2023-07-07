@@ -1,8 +1,10 @@
 import {Sequelize} from 'sequelize'
 import {DATABASES_CONFIG} from '../config'
+import AppModel from '../models/App.model'
 import AppPortModel from '../models/AppPort.model'
 import logger from '../utils/loggers'
 import appPortRepoTemplate from './app-port.repo'
+import appTemplate from './app.repo'
 import migrationScript from './migration'
 
 export const DEFAULT_DATABASE = DATABASES_CONFIG[DATABASES_CONFIG.default]
@@ -27,5 +29,7 @@ export default sequelize.authenticate()
 migrationScript(sequelize).then(() => logger.info('Migration scripts executed successfully'))
 
 const AppPort = AppPortModel(sequelize)
+const App = AppModel(sequelize)
 
 export const appPortRepo = appPortRepoTemplate({conn: sequelize})
+export const appRepo = appTemplate({conn: sequelize})

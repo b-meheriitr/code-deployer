@@ -28,6 +28,7 @@ const config = {
 	APP: {
 		APPS_BACKUPS_PATH: `${get('app.backup-path')}`,
 		APPS_EXECUTABLE_PATH: `${get('app.apps-executable-path')}`,
+		APPS_DATA_PATH: `${get('app.apps-data-path')}`,
 		NGINX: screamingCaseEachProperty(get('app.nginx')),
 		ASSIGNABLE_PORTS_RANGE: get('app.assignablePortsRange'),
 	},

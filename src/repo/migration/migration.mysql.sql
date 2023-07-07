@@ -10,3 +10,18 @@ CREATE TABLE IF NOT EXISTS `app-port`
     CONSTRAINT idx_unique_columns_hostName_port
         UNIQUE (hostName, port)
 );
+
+CREATE TABLE IF NOT EXISTS `app`
+(
+    `id`              VARCHAR(256) NOT NULL
+        PRIMARY KEY,
+    `appName`         TEXT NOT NULL,
+    `package`         TEXT,
+    `appAbsolutePath` TEXT NOT NULL,
+    `dataPath`        TEXT NOT NULL,
+    `backupPath`      TEXT NOT NULL,
+    `nginxRoutePath`  VARCHAR(256) NOT NULL
+        UNIQUE,
+    `createdOn`       DATETIME,
+    `updatedOn`       DATETIME
+);

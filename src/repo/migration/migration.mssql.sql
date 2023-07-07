@@ -23,3 +23,24 @@ IF NOT EXISTS (SELECT *
                 UNIQUE (hostName, port)
         )
     END
+
+
+IF NOT EXISTS (SELECT *
+               FROM sys.tables
+               WHERE name = 'app')
+    BEGIN
+        CREATE TABLE [code-deployer].[app]
+        (
+            id        INT IDENTITY
+                PRIMARY KEY,
+            appName         NVARCHAR(MAX) NOT NULL,
+            package         NVARCHAR(MAX),
+            appAbsolutePath NVARCHAR(MAX) NOT NULL,
+            dataPath        NVARCHAR(MAX) NOT NULL,
+            backupPath      NVARCHAR(MAX) NOT NULL,
+            nginxRoutePath  NVARCHAR(256) NOT NULL
+                UNIQUE,
+            createdOn       DATETIME,
+            updatedOn       DATETIME
+        )
+    END

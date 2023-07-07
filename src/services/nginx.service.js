@@ -31,7 +31,7 @@ export default class NginxUtil {
 
 	constructor(appInfo) {
 		this.app = appInfo
-		this.#configFilePath = path.join(NGINX_CONF.DYNAMIC_CONFS_DIR, `${this.app.name}.conf`)
+		this.#configFilePath = path.join(NGINX_CONF.DYNAMIC_CONFS_DIR, `${this.app.id}.conf`)
 	}
 
 	// eslint-disable-next-line class-methods-use-this
@@ -45,7 +45,7 @@ export default class NginxUtil {
 
 	async createRoute() {
 		const {app} = this
-		const newRoutePath = `${app.name}`
+		const newRoutePath = `${app.nginxRoutePath}`
 		const newConfigContent = buildConfigContent({
 			path: newRoutePath,
 			target: {port: app.port, path: app.targetRootPath},

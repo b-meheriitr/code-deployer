@@ -1,7 +1,10 @@
 export class AppNotFoundError extends Error {
-	constructor(appName: string) {
-		super(`App name: ${appName} not found`)
+	constructor(appId: string) {
+		super(`App id: ${appId} not found`)
 	}
+}
+
+export class AppValidationError extends Error {
 }
 
 export class AppIdNotPresentInHeadersError extends Error {
