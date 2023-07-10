@@ -9,7 +9,7 @@ const buildConfigContent = config => {
 	if (config.target.path) {
 		return `location /${config.path} {    
                     alias ${config.target.path};
-                    try_files $uri $uri/ /index.html =404;    
+                    try_files $uri $uri/index.html $uri/index.htm /index.html /index.htm =404;
                 }\n`
 	}
 
