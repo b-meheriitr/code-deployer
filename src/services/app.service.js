@@ -16,6 +16,7 @@ export function upsert(data) {
 			if (existingRecord) {
 				beforeUpdate(data)
 				return appRepo.update(data, {where: {id: data.id}})
+					.then(() => data)
 			}
 			return appRepo.insert(data)
 		})

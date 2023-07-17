@@ -58,7 +58,7 @@ router.post(
 				_info: _otherInfo,
 			}
 
-			const [app] = await appService.upsert({
+			const app = await appService.upsert({
 				id: `${_otherInfo.package ? `${_otherInfo.package}.` : ''}${appName}`,
 				appName,
 				package: _otherInfo.package || '',

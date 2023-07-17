@@ -71,7 +71,7 @@ async function listenForProcessToBeUp(processName) {
 		.then(process => {
 			return new Promise((resolve, reject) => {
 				const {
-					MAX_AWAITABLE_TIME_TO_SERVER_UP_TIME_SECS: maxAwaitableTimeToServerUpTimeSecs = 20,
+					MAX_AWAITABLE_TIME_TO_SERVER_UP_TIME_SECS: maxAwaitableTimeToServerUpTimeSecs = 5,
 					SERVER_PORT,
 				} = process.pm2_env.env
 
