@@ -31,6 +31,10 @@ const config = {
 		APPS_DATA_PATH: `${get('app.apps-data-path')}`,
 		NGINX: screamingCaseEachProperty(get('app.nginx')),
 		ASSIGNABLE_PORTS_RANGE: get('app.assignablePortsRange'),
+		CODE_BUILDER: {
+			ARTIFACTS_DIR: get('app.artifacts-dir'),
+			CODEBASE_DIR: get('app.codebase-dir'),
+		},
 	},
 	DATABASES: get('databases'),
 }

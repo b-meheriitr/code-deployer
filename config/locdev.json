@@ -13,6 +13,8 @@
     "backup-path": ".backups",
     "apps-executable-path": ".executables",
     "apps-data-path": ".app-data",
+    "artifacts-dir": ".code-builder/artifacts",
+    "codebase-dir": ".code-builder/codebases",
     "nginx": {
       "dynamic-confs-dir": "/opt/homebrew/etc/nginx/code-deployer-routes.conf.d"
     }

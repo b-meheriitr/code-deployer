@@ -3,7 +3,7 @@ import {API_CONFIG, isDevEnv} from './config'
 import router from './routes'
 import {logUncaughtError, requestResponseMetaInfoLogger} from './utils/loggers/requests.logger'
 import {filterOutNodeModuleStacks} from './utils/loggers/utils.logger'
-import {dateString, uuid} from './utils/utils'
+import {dateString, sendJsonCheckingHeadersSent, uuid} from './utils/utils'
 
 const app = express()
 app.disable('x-powered-by')
@@ -43,7 +43,7 @@ app.use((err, req, res, next) => {
 		}
 	}
 
-	res.status(500).json(resBody)
+	sendJsonCheckingHeadersSent({res, status: 500, json: resBody})
 })
 
 export default app

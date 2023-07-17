@@ -23,14 +23,7 @@ export const createDirectoryRecursiveSync = createDirPath => {
 	fs.mkdirSync(createDirPath, {recursive: true})
 }
 
-export const backupFiles = (sourceDir, backupOutFilePath, ignore) => {
-	if (!fs.existsSync(sourceDir)) {
-		throw new SourceBackupDirNotExistErr(sourceDir)
-	}
-
-	createDirectoryRecursiveSync(path.dirname(backupOutFilePath))
-
-	const output = fs.createWriteStream(backupOutFilePath)
+export function zipDirToStream(sourceDir, ignore, outStream) {
 	const archive = archiver('zip', {zlib: {level: 9}})
 
 	return new Promise((resolve, reject) => {
@@ -38,12 +31,25 @@ export const backupFiles = (sourceDir, backupOutFilePath, ignore) => {
 
 		archive.on('error', err => reject(err))
 			.on('end', f => f)
-			.pipe(output)
+			.pipe(outStream)
 
-		output.on('close', () => resolve(backupOutFilePath))
+		outStream.on('close', () => resolve())
 
 		archive.finalize()
 	})
+}
+
+export const zipDir = (sourceDir, outFilePath, ignore = []) => {
+	if (!fs.existsSync(sourceDir)) {
+		throw new SourceBackupDirNotExistErr(sourceDir)
+	}
+
+	createDirectoryRecursiveSync(path.dirname(outFilePath))
+
+	const output = fs.createWriteStream(outFilePath)
+
+	return zipDirToStream(sourceDir, ignore, output)
+		.then(() => outFilePath)
 }
 
 function deleteDirRecursivelyIgnoringPatterns(innerDirPath, patterns) {
@@ -175,7 +181,7 @@ export class FsActionsHelper {
 
 	async backupSource() {
 		try {
-			await backupFiles(this.#sourceDir, this.#backupZipFilePath, this.#ignoreBackupPattern)
+			await zipDir(this.#sourceDir, this.#backupZipFilePath, this.#ignoreBackupPattern)
 
 			this.#sourceDirExisted = true
 			this.#backupSuccess = true

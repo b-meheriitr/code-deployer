@@ -1,14 +1,7 @@
 import {AppIdNotPresentInHeadersError, AppNotFoundError} from '../errors/errors'
 import {RollbackStatusesWithBaseReason} from '../models/RollbackStatus'
 import deployService from '../services/deploy.service'
-
-function getAppId(req) {
-	const appId = req.headers['app-name']
-	if (!appId) {
-		throw new AppIdNotPresentInHeadersError()
-	}
-	return appId
-}
+import {getAppId} from '../utils/utils'
 
 export default async (req, res) => {
 	try {

@@ -8,6 +8,8 @@ import * as appService from '../services/app.service'
 import {wrapErrHandler} from '../utils/controllerUtils'
 import {createDirectoryRecursiveSync} from '../utils/files.utils'
 import {getNextAvailablePort} from '../utils/os.utils'
+import {getPackagePath} from '../utils/utils'
+import buildRoute from './build.route'
 import deployRoute from './deploy.route'
 
 function validateAppRegisterReqBody(body) {
@@ -17,6 +19,7 @@ function validateAppRegisterReqBody(body) {
 const router = Router()
 
 router.use('/deploy', deployRoute)
+router.use('/build', buildRoute)
 
 router.get('/next-available-port/:port', async (req, res) => {
 	res.status(200).json(await getNextAvailablePort(+req.params.port))
@@ -33,7 +36,7 @@ router.post(
 
 		const {name: appName, info: appInfo, ..._otherInfo} = req.body
 
-		const packagePath = (_otherInfo.package || '/').replace(/\./g, '/')
+		const packagePath = getPackagePath(_otherInfo.package)
 
 		const appPath = path.join(APP_CONFIG.APPS_EXECUTABLE_PATH, packagePath, appName)
 

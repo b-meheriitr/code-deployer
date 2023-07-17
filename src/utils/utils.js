@@ -2,6 +2,7 @@ import moment from 'moment'
 import * as util from 'util'
 import {v4 as uuidv4} from 'uuid'
 import {DATE_FORMAT} from '../config'
+import {AppIdNotPresentInHeadersError} from '../errors/errors'
 
 export const uuid = () => uuidv4()
 
@@ -20,3 +21,29 @@ export const toWhiteSpaceSeparatedString = array => {
 }
 
 export const dateString = (format = DATE_FORMAT) => moment().format(format)
+
+export function getAppId(req) {
+	const appId = req.headers['app-name']
+	if (!appId) {
+		throw new AppIdNotPresentInHeadersError()
+	}
+	return appId
+}
+
+export function getPackagePath(packageName) {
+	return (packageName || '/').replace(/\./g, '/')
+}
+
+export function sendMessage(res, message, messageTag = 'message') {
+	res.write(`${messageTag}: ${message}`)
+}
+
+export function sendJsonCheckingHeadersSent({res, status, json}) {
+	if (res.headersSent) {
+		json.apiStatus = status
+		sendMessage(res, JSON.stringify(json), status >= 200 && status < 300 ? 'message' : 'error')
+		res.end()
+	} else {
+		res.status(status).json(json)
+	}
+}

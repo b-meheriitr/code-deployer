@@ -1,6 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 import pm2 from 'pm2'
+import {SERVERLESS_APP_TYPES} from '../consts/app-type'
 import {AppNotFoundError} from '../errors/errors'
 import {Pm2ProcessErrorOnRestart, Pm2ProcessNotFoundError, Pm2ProcessNotFoundErrorBy} from '../errors/pm2.errors'
 import logger from '../utils/loggers'
@@ -226,7 +227,7 @@ class ServerLessPm2Service {
 
 export function isServerLess(appConfig) {
 	// eslint-disable-next-line no-underscore-dangle
-	return ['reactjs'].includes(appConfig._info?.type)
+	return SERVERLESS_APP_TYPES.includes(appConfig._info?.type)
 }
 
 export function getPm2Service(appConfig) {

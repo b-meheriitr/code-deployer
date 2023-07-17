@@ -1,6 +1,7 @@
 import _ from 'lodash'
 import path from 'path'
 import {APP_CONFIG} from '../config'
+import APPS_TYPE from '../consts/app-type'
 import logger from '../utils/loggers'
 import {getNextAvailablePort} from '../utils/os.utils'
 import {AppPortService} from './app-port.service'
@@ -120,7 +121,7 @@ export default class EnvConfigSetterService {
 		let newVariables
 
 		// eslint-disable-next-line no-underscore-dangle
-		if (this.appConfig._info?.type === 'reactjs') {
+		if (this.appConfig._info?.type === APPS_TYPE.REACTJS) {
 			newVariables = {
 				CONTENT_ROOT: config.contentRoot,
 			}

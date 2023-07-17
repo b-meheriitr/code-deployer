@@ -17,6 +17,8 @@
     "backup-path": "/deployments/backups",
     "apps-executable-path": "/deployments/executables",
     "apps-data-path": "/deployments/app-data",
+    "artifacts-dir": "/temp/code-builder/artifacts",
+    "codebase-dir": "/temp/code-builder/codebases",
     "nginx": {
       "port": 80,
       "executable-path": "nginx",
