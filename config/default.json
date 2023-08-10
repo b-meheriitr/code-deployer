@@ -1,7 +1,8 @@
 {
   "server": {
     "port": 8080,
-    "name": "app"
+    "name": "app",
+    "protocol-address": ""
   },
   "logging": {
     "override-global-console-methods": true,

@@ -137,18 +137,22 @@ export function waitForPortToListenThenReconfirmItsStillListening(port, waitTime
 
 	const portsPollerId = setInterval(async () => {
 		if (await isPortListening(port)) {
-			resolvePortListening()
+			resolvePortListening('PORT_IS_UP')
 		}
 	}, 500)
 
 	return [
 		portListeningNotificationPromise
-			.then(isCancel => {
+			.then(cancelledDueTo => {
 				clearInterval(portsPollerId)
-				return isCancel
-					|| sleep(waitTimeToConfirm)
-						.then(() => isPortListening(port))
+				return cancelledDueTo === 'PORT_IS_UP'
+				       ? sleep(waitTimeToConfirm).then(() => isPortListening(port))
+				       : cancelledDueTo
 			}),
-		() => resolvePortListening('CANCELLED'),
+		cancelledDueTo => {
+			return resolvePortListening(cancelledDueTo)
+		},
 	]
 }
+
+export const isWindowsPath = filePath => /^[A-Z]:\\/i.test(filePath)

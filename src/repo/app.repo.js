@@ -23,6 +23,14 @@ class AppRepo {
 	findOne = (where, opts = {}) => {
 		return this.App.findOne({where}, opts)
 	}
+
+	findAll = (opts = {}) => {
+		return this.App.findAll(opts)
+	}
+
+	exists = (appId, opts = {}) => {
+		return this.App.count({where: {id: appId}}, opts).then(count => count > 0)
+	}
 }
 
 export default conn => ({...new AppRepo(conn)})

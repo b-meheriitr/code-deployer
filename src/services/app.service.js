@@ -1,7 +1,7 @@
 import {AppNotFoundError, AppValidationError} from '../errors/errors'
 import {appRepo} from '../repo'
 import {beforeUpdate} from '../utils/repo.utils'
-import {throwIfNull} from '../utils/utils'
+import {throwIfNull, toLocalDateString} from '../utils/utils'
 
 export async function getByAppId(appId) {
 	return throwIfNull(
@@ -25,5 +25,25 @@ export function upsert(data) {
 				throw new AppValidationError(`App with nginxRoutePath: ${data.nginxRoutePath} already exists`)
 			}
 			throw err
+		})
+}
+
+export function appExists(appId) {
+	return appRepo.exists(appId)
+}
+
+export function getAll() {
+	return appRepo.findAll()
+		.then(apps => {
+			apps.sort(({dataValues: a}, {dataValues: b}) => a.createdOn - b.createdOn)
+			return apps
+		})
+		.then(apps => {
+			apps.forEach(({dataValues: ap}) => {
+				ap.createdOn = toLocalDateString(ap.createdOn)
+				ap.updatedOn = toLocalDateString(ap.updatedOn)
+			})
+
+			return apps
 		})
 }

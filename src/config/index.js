@@ -3,6 +3,7 @@ import _ from 'lodash'
 import os from 'os'
 
 const get = configLibrary.get.bind(configLibrary)
+const has = configLibrary.has.bind(configLibrary)
 
 export function screamingCaseEachProperty(obj) {
 	return _.mapKeys(obj, (value, key) => _.snakeCase(key).toUpperCase())
@@ -14,6 +15,7 @@ const config = {
 		PORT: get('server.port'),
 		NAME: get('server.name'),
 		HOST_NAME: os.hostname(),
+		PROTOCOL_ADDRESS: has('server.protocol-address') ? get('server.protocol-address') : '',
 	},
 	LOGGING: {
 		OVERRIDE_GLOBAL_CONSOLE_METHODS: get('logging.override-global-console-methods'),

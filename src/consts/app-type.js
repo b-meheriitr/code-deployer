@@ -1,6 +1,7 @@
 const APPS_TYPE = {
 	REACTJS: 'reactjs',
 	NODE_JS: 'nodejs',
+	DOTNET: 'dotnet',
 }
 
 export default APPS_TYPE

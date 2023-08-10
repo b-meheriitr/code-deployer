@@ -39,6 +39,16 @@ function getBuildInfo(type) {
 			cleanCodeBaseIgnoreDelete: ['node_modules/**'],
 		}
 	}
+	if (type === APPS_TYPE.DOTNET) {
+		return {
+			commands: [
+				'dotnet restore',
+				'dotnet publish -c release -o ./publish',
+			],
+			buildPath: './publish',
+			cleanCodeBaseIgnoreDelete: ['obj/**', 'bin/**'],
+		}
+	}
 
 	throw new AppValidationError(`Invalid app type ${type} for build`)
 }
@@ -69,7 +79,7 @@ export default async (req, res) => {
 	buildInfo.buildPath = path.join(codeBaseDir, buildInfo.buildPath)
 
 	sendMessage(res, 'Deleting existing codebase')
-	await deleteFolder(codeBaseDir, req.body.cleanCodeBaseIgnoreDelete)
+	await deleteFolder(codeBaseDir, buildInfo.cleanCodeBaseIgnoreDelete)
 	sendMessage(res, 'Deleting existing codebase -- completed')
 
 	sendMessage(res, 'Unzipping incoming codebase')

@@ -1,7 +1,8 @@
 import {promises as fs} from 'fs'
 import path from 'path'
-import {APP_CONFIG} from '../config'
-import {isWindowsOs, runCommand} from '../utils/os.utils'
+import {APP_CONFIG, SERVER_CONFIG} from '../config'
+import {isWindowsOs, isWindowsPath, runCommand} from '../utils/os.utils'
+import {removeRedundantPortFromUrl} from '../utils/utils'
 
 const NGINX_CONF = APP_CONFIG.NGINX
 
@@ -87,6 +88,9 @@ export default class NginxUtil {
 		return {
 			port: NGINX_CONF.PORT,
 			basePath: `/${newRoutePath}`,
+			baseUrl: SERVER_CONFIG.PROTOCOL_ADDRESS
+			         ? removeRedundantPortFromUrl(`${SERVER_CONFIG.PROTOCOL_ADDRESS}:${NGINX_CONF.PORT}/${newRoutePath}`)
+			         : undefined,
 		}
 	}
 
@@ -96,7 +100,9 @@ export default class NginxUtil {
 			return {port: targetPortOrPath}
 		}
 
-		this.app.targetRootPath = targetPortOrPath
+		this.app.targetRootPath = isWindowsPath(targetPortOrPath)
+		                          ? targetPortOrPath.replace(/\\/g, '/')
+		                          : targetPortOrPath
 		return {}
 	}
 

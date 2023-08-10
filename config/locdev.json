@@ -1,6 +1,7 @@
 {
   "server": {
-    "port": 8011
+    "port": 8011,
+    "protocol-address": "http://localhost"
   },
   "logging": {
     "override-global-console-methods": true,

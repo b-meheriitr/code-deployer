@@ -238,3 +238,24 @@ export class FsActionsHelper {
 			.then(() => removeFileSync(this.#backupZipFilePath))
 	}
 }
+
+export function readLastNLines(filePath, numLines = 20) {
+	return new Promise((resolve, reject) => {
+		const lineArray = []
+
+		const stream = fs.createReadStream(filePath)
+
+		stream.on('error', error => reject(error))
+		stream.on('data', chunk => {
+			const lines = chunk.toString().split('\n')
+			lineArray.push(...lines)
+
+			if (lineArray.length > numLines) {
+				lineArray.splice(0, lineArray.length - numLines)
+			}
+		})
+		stream.on('end', () => {
+			resolve(lineArray)
+		})
+	})
+}

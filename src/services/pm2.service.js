@@ -4,6 +4,7 @@ import pm2 from 'pm2'
 import {SERVERLESS_APP_TYPES} from '../consts/app-type'
 import {AppNotFoundError} from '../errors/errors'
 import {Pm2ProcessErrorOnRestart, Pm2ProcessNotFoundError, Pm2ProcessNotFoundErrorBy} from '../errors/pm2.errors'
+import {readLastNLines} from '../utils/files.utils'
 import logger from '../utils/loggers'
 import {sleep, waitForPortToListenThenReconfirmItsStillListening} from '../utils/os.utils'
 import * as appService from './app.service'
@@ -82,17 +83,27 @@ async function listenForProcessToBeUp(processName) {
 				)
 
 				sleep(maxAwaitableTimeToServerUpTimeSecs * 1000)
-					.then(cancelP1)
+					.then(() => cancelP1({cancelledDueTo: 'TIME_OUT'}))
 
 				bus.on('process:exception', data => {
 					if (data.process.name === processName) {
-						cancelP1()
+						cancelP1('error')
 						reject(new Pm2ProcessErrorOnRestart(data.data))
 					}
 				})
 
+				bus.on('process:event', packet => {
+					if (packet.process.name === processName && packet.process.status === 'errored') {
+						readLastNLines(packet.process.pm_err_log_path, 15)
+							.then(h => {
+								cancelP1('error')
+								reject(new Pm2ProcessErrorOnRestart({message: h[0], logs: h}))
+							})
+					}
+				})
+
 				p1.then(isListening => {
-					if (typeof isListening === 'string') {
+					if (isListening === 'TIME_OUT') {
 						return resolve(new Pm2ProcessErrorOnRestart(
 							`Server did not up in ${maxAwaitableTimeToServerUpTimeSecs} seconds`,
 						))
@@ -253,9 +264,10 @@ export const getPm2FileConfig = async appId => {
 	return JSON.parse(await fs.promises.readFile(appPm2Path, 'utf-8'))
 }
 
-export const writeNewEnvConfigToPm2 = async (appId, newEnv) => {
+export const writeNewEnvCliArgsConfigToPm2 = async (appId, {env, args}) => {
 	const pm2Config = await getPm2FileConfig(appId)
-	pm2Config[0].env = newEnv
+	pm2Config[0].env = env
+	pm2Config[0].args = args
 
 	fs.writeFileSync(await getAppPm2Path(appId), JSON.stringify(pm2Config, null, 2))
 }
