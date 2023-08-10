@@ -13,6 +13,8 @@ export default async (req, res) => {
 		)
 		return res.status(201).json(data)
 	} catch (err) {
+		req.error = err
+
 		if (err instanceof AppNotFoundError) {
 			return res.status(422)
 				.json({message: `${err.message}. Register your app.`})

@@ -1,6 +1,7 @@
 import {Router} from 'express'
 import {getNextAvailablePort} from '../utils/os.utils'
 import appRoute from './app.route'
+import historyRoute from './build-deploy-history.route'
 import buildRoute from './build.route'
 import deployRoute from './deploy.route'
 
@@ -8,6 +9,7 @@ const router = Router()
 
 router.use('/deploy', deployRoute)
 router.use('/build', buildRoute)
+router.use('/history', historyRoute)
 router.use('/app', appRoute)
 
 router.get('/next-available-port/:port', async (req, res) => {

@@ -2,6 +2,7 @@ import {Router} from 'express'
 import buildController, {downloadArtifactZip} from '../controllers/build.controller'
 import {AppIdNotPresentInHeadersError, AppNotFoundError, CorruptedIncomingZipError} from '../errors/errors'
 import {formDataFileToBufferMw, verifyIncomingZip} from '../middlewares/files.mw'
+import {logBuildHistoryRecord} from '../services/build-deployment-history.service'
 import {wrapErrHandler} from '../utils/controllerUtils'
 import {sendJsonCheckingHeadersSent} from '../utils/utils'
 
@@ -15,7 +16,14 @@ router.post(
 		req.body = JSON.parse(req.body.body)
 		next()
 	},
-	wrapErrHandler(buildController),
+
+	wrapErrHandler(async (req, res, next) => {
+		await logBuildHistoryRecord(
+			() => buildController(req, res, next),
+			req,
+		)
+	}),
+
 	(err, req, res, next) => {
 		if (err instanceof CorruptedIncomingZipError) {
 			return sendJsonCheckingHeadersSent({

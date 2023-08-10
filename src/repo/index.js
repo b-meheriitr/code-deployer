@@ -2,9 +2,11 @@ import {Sequelize} from 'sequelize'
 import {DATABASES_CONFIG} from '../config'
 import AppModel from '../models/App.model'
 import AppPortModel from '../models/AppPort.model'
+import BuildDeploymentHistoryModel from '../models/BuildDeploymentHistory.model'
 import logger from '../utils/loggers'
 import appPortRepoTemplate from './app-port.repo'
 import appTemplate from './app.repo'
+import buildDeploymentHistoryTemplate from './build-deployment-history.repo'
 import migrationScript from './migration'
 
 export const DEFAULT_DATABASE = DATABASES_CONFIG[DATABASES_CONFIG.default]
@@ -30,6 +32,8 @@ migrationScript(sequelize).then(() => logger.info('Migration scripts executed su
 
 const AppPort = AppPortModel(sequelize)
 const App = AppModel(sequelize)
+const BuildDeploymentHistory = BuildDeploymentHistoryModel(sequelize)
 
 export const appPortRepo = appPortRepoTemplate({conn: sequelize})
 export const appRepo = appTemplate({conn: sequelize})
+export const buildDeploymentHistoryRepo = buildDeploymentHistoryTemplate({conn: sequelize})

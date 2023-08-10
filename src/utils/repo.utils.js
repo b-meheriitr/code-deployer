@@ -1,7 +1,9 @@
+import {now} from './utils'
+
 export function beforeCreate(attributes, options) {
-	attributes.createdOn = new Date()
+	attributes.createdOn = now()
 }
 
 export function beforeUpdate(attributes, options) {
-	attributes.updatedOn = new Date()
+	attributes.updatedOn = now()
 }

@@ -98,6 +98,7 @@ export default async (req, res) => {
 		stdout && sendMessage(res, `ℹ️ ${stdout}`, 'command-message')
 		stderr && sendMessage(res, `⚠️ ${stderr}`, 'command-warning')
 		if (commandError) {
+			req.error = commandError
 			sendMessage(res, `❌ ${commandError}`, 'command-error')
 			sendMessage(res, 'Aborting build subsequent build steps, See ya soon !! 🙂')
 			return res.end()

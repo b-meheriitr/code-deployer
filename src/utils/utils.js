@@ -20,6 +20,8 @@ export const toWhiteSpaceSeparatedString = array => {
 		.join(', ')
 }
 
+export const now = () => moment()
+
 export const dateString = (format = DATE_FORMAT) => moment().format(format)
 
 export function toLocalDateString(date) {

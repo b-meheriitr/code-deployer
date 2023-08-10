@@ -12,8 +12,8 @@ import * as appService from './app.service'
 const promisifyCallBack = (resolve, reject) => {
 	return (err, data) => {
 		return err
-			? reject(err instanceof Error ? err : new Error(err))
-			: resolve(data)
+		       ? reject(err instanceof Error ? err : new Error(err))
+		       : resolve(data)
 	}
 }
 
@@ -110,8 +110,8 @@ async function listenForProcessToBeUp(processName) {
 					}
 
 					return isListening
-						? resolve(true)
-						: resolve(new Pm2ProcessErrorOnRestart(
+					       ? resolve(true)
+					       : resolve(new Pm2ProcessErrorOnRestart(
 							`Server stopped listening after ${waitTimeToConfirmInSes} sec`,
 						))
 				})

@@ -32,8 +32,8 @@ export default class EnvConfigSetterService {
 	execute = async action => {
 		try {
 			const availablePort = isServerLess(this.appConfig)
-				? undefined
-				: await this.#registerAnAvailablePort()
+			                      ? undefined
+			                      : await this.#registerAnAvailablePort()
 					.then(
 						port => {
 							this.#registeredNewPort = true
@@ -46,8 +46,8 @@ export default class EnvConfigSetterService {
 					)
 
 			const contentRoot = isServerLess(this.appConfig)
-				? path.resolve(this.appConfig.cwd)
-				: undefined
+			                    ? path.resolve(this.appConfig.cwd)
+			                    : undefined
 
 			this.#setEnvVariablesAndCliArgs({availablePort, contentRoot})
 

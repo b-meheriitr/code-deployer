@@ -31,8 +31,8 @@ class PortsFinder {
 		const processDetails = this.filterResultByPid(commandResult.split(os.EOL))
 
 		const ports = processDetails.length
-			? [...new Set(this.extractPortFromProcessDetails(processDetails))]
-			: undefined
+		              ? [...new Set(this.extractPortFromProcessDetails(processDetails))]
+		              : undefined
 
 		if (ports === undefined) {
 			throw new Error(`No associated port for the pid ${this.pid}`)
