@@ -23,6 +23,19 @@ router.get(
 	}),
 )
 
+function getNginxPath(otherInfo, appName) {
+	if (otherInfo.nginxRoutePath === '/') {
+		return ''
+	}
+
+	return otherInfo.nginxRoutePath
+		|| (
+			otherInfo.package
+				? `${otherInfo.package.replace(/\./g, '-')}-${appName}`
+				: appName
+		)
+}
+
 router.post(
 	'/register',
 	wrapErrHandler(async (req, res) => {
@@ -61,12 +74,7 @@ router.post(
 				appAbsolutePath: path.resolve(appPath),
 				backupPath: path.resolve(appBackupPath),
 				dataPath: path.resolve(appDataPath),
-				nginxRoutePath: _otherInfo.nginxRoutePath
-					|| (
-						_otherInfo.package
-							? `${_otherInfo.package.replace(/\./g, '-')}-${appName}`
-							: appName
-					),
+				nginxRoutePath: getNginxPath(_otherInfo, appName),
 			})
 
 			await fs.promises.writeFile(

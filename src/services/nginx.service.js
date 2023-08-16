@@ -9,7 +9,7 @@ const NGINX_CONF = APP_CONFIG.NGINX
 const buildConfigContent = config => {
 	if (config.target.path) {
 		return `location /${config.path} {    
-                    alias ${config.target.path};
+                    ${config.path ? 'alias' : 'root'} ${config.target.path};
                     try_files $uri $uri/index.html $uri/index.htm /index.html /index.htm =404;
                 }\n`
 	}
