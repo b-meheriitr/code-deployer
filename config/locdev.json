@@ -19,5 +19,9 @@
     "nginx": {
       "dynamic-confs-dir": "/opt/homebrew/etc/nginx/code-deployer-routes.conf.d"
     }
-  }
+  },
+  "databases": {
+    "logging": true
+  },
+  "deploymentAuthenticationMechanism": ""
 }

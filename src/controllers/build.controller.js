@@ -5,7 +5,7 @@ import {APP_CONFIG} from '../config'
 import APPS_TYPE from '../consts/app-type'
 import {AppValidationError} from '../errors/errors'
 import {getPm2FileConfig} from '../services/pm2.service'
-import {deleteFolder, unzipBufferStream, zipDir} from '../utils/files.utils'
+import {copyFilePatterns, deleteFolder, unzipBufferStream, zipDir} from '../utils/files.utils'
 import {runCommand} from '../utils/os.utils'
 import {getAppId, getPackagePath, sendMessage} from '../utils/utils'
 
@@ -49,6 +49,17 @@ function getBuildInfo(type) {
 			cleanCodeBaseIgnoreDelete: ['obj/**', 'bin/**'],
 		}
 	}
+	if (type === APPS_TYPE.PYTHON) {
+		return {
+			commands: [
+				'source venv/bin/activate && pip install -r requirements.txt',
+			],
+			buildPath: './build',
+			cleanCodeBaseIgnoreDelete: [
+				'venv/**',
+			],
+		}
+	}
 
 	throw new AppValidationError(`Invalid app type ${type} for build`)
 }
@@ -76,6 +87,7 @@ export default async (req, res) => {
 		...getBuildInfo(app._info.type || APPS_TYPE.NODE_JS),
 		...(req.body.buildInfo),
 	}
+	buildInfo.cleanCodeBaseIgnoreDelete?.push(buildInfo.buildPath)
 	buildInfo.buildPath = path.join(codeBaseDir, buildInfo.buildPath)
 
 	sendMessage(res, 'Deleting existing codebase')
@@ -105,6 +117,20 @@ export default async (req, res) => {
 		}
 
 		sendMessage(res, `✅ completed '${command}' in ${timeTaken > 1000 ? `${timeTaken / 1000}s` : `${timeTaken}ms`}`)
+	}
+
+	await copyFilePatterns(
+		req.body.projectConfig.build.copyFiles,
+		path.join(codeBaseDir, req.body.projectConfig.build.buildPath),
+		codeBaseDir,
+	)
+
+	if (req.body.includeDependencyPackages) {
+		await copyFilePatterns(
+			req.body.dependencyPackagesFilePatterns,
+			buildInfo.buildPath,
+			codeBaseDir,
+		)
 	}
 
 	sendMessage(res, 'build finished')

@@ -68,3 +68,32 @@ export function removeRedundantPortFromUrl(urlString) {
 		throw new Error('Invalid URL:', err.message)
 	}
 }
+
+export function rejectAtTime(absoluteTime) {
+	const currentTime = Date.now()
+
+	let cancel
+	const promise = new Promise((resolve, reject) => {
+		if (currentTime >= absoluteTime) {
+			reject(new Error('Promise rejected at absolute time'))
+			return
+		}
+
+		const timeout = absoluteTime - currentTime
+		const id = setTimeout(
+			() => reject(new Error('Promise rejected at absolute time')),
+			timeout,
+		)
+
+		cancel = () => clearTimeout(id)
+	})
+
+	return [
+		promise,
+		cancel,
+	]
+}
+
+export function parseBoolean(str) {
+	return str && (str.trim().toLowerCase() === 'true')
+}

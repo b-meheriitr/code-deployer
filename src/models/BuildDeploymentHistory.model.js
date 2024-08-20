@@ -1,7 +1,7 @@
 import {DataTypes} from 'sequelize'
 
 export default conn => {
-	conn.define(
+	return conn.define(
 		'BuildDeploymentHistory',
 		{
 			id: {
@@ -33,6 +33,9 @@ export default conn => {
 				type: DataTypes.INTEGER,
 			},
 			userIp: {
+				type: DataTypes.STRING,
+			},
+			requestId: {
 				type: DataTypes.STRING,
 			},
 			error: {

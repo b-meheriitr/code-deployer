@@ -1,6 +1,7 @@
 import AdmZip from 'adm-zip'
 import archiver from 'archiver'
 import fs from 'fs'
+import {glob} from 'glob'
 import minimatch from 'minimatch'
 import path from 'path'
 import {CorruptedIncomingZipError, SourceBackupDirNotExistErr} from '../errors/errors'
@@ -258,4 +259,42 @@ export function readLastNLines(filePath, numLines = 20) {
 			resolve(lineArray)
 		})
 	})
+}
+
+export const copyFilePatterns = (filePatterns, destinationDirAbsPath, workingDir = './') => {
+	return Promise.all(
+		filePatterns.map(async filePattern => {
+			const {cwd, pattern = '**/*', ignore} = typeof filePattern === 'string'
+			                                        ? {cwd: workingDir, pattern: filePattern, ignore: []}
+			                                        : {
+					cwd: path.join(workingDir, filePattern.cwd || './'),
+					pattern: filePattern,
+					ignore: [],
+				}
+
+			const matchedFiles = await glob(pattern, {cwd, ignore, dot: true})
+
+			return Promise.all(
+				matchedFiles.map(async file => {
+					const sourceFilePath = path.join(cwd, file)
+					const destinationFilePath = path.join(destinationDirAbsPath, file)
+
+					if ((await fs.promises.stat(sourceFilePath)).isFile()) {
+						try {
+							fs.mkdirSync(
+								path.dirname(destinationFilePath),
+								{recursive: true},
+							)
+						} catch (e) {
+							if (e.code !== 'EEXIST') throw e
+						}
+
+						return fs.promises.copyFile(sourceFilePath, destinationFilePath)
+					}
+
+					return -1
+				}),
+			)
+		}),
+	)
 }

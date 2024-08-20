@@ -1,0 +1,72 @@
+{
+  "appName": "code-deployer-bundle",
+  "deployment": {
+    "deploymentIgnoreDelete": [],
+    "local": {
+      "api": {
+        "baseUrl": "http://localhost:8011"
+      }
+    },
+    "dev": {
+      "api": {
+        "baseUrl": "http://10.21.86.160:8080"
+      }
+    },
+    "preprod": {
+      "api": {
+        "baseUrl": "http://10.131.162.143:8080"
+      }
+    }
+  },
+  "build": {
+    "buildInfo": {
+      "usesDbdBuilder": true,
+      "bundle": {
+        "bundledDependencies": [
+          "fsevents",
+          "pm2-deploy",
+          "pg-hstore",
+          "sqlite3",
+          "tedious",
+          "mysql2",
+          "nock",
+          "aws-sdk",
+          "mock-aws-s3",
+          "bcrypt"
+        ],
+        "esbuildConfig": {
+          "entryPoints": [
+            "src/bin/www.js"
+          ],
+          "minify": true,
+          "bundle": true,
+          "metafile": false
+        }
+      },
+      "commands": [
+        "npm i --include=dev",
+        "npm run bundle"
+      ]
+    },
+    "buildoh": {
+      "api": {
+        "baseUrl": "http://10.21.86.161:8080"
+      }
+    },
+    "copyFiles": [
+      {
+        "pattern": ".env*",
+        "cwd": "./"
+      },
+      {
+        "pattern": "*.sql",
+        "cwd": "src/repo/migration"
+      },
+      {
+        "pattern": "config/**/*",
+        "cwd": "./",
+        "ignore": []
+      }
+    ]
+  }
+}

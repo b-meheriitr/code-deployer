@@ -2,12 +2,17 @@ import {Sequelize} from 'sequelize'
 import {DATABASES_CONFIG} from '../config'
 import AppModel from '../models/App.model'
 import AppPortModel from '../models/AppPort.model'
+import UserPasswordModel from '../models/auth/UserPassword.model'
 import BuildDeploymentHistoryModel from '../models/BuildDeploymentHistory.model'
+import userModel from '../models/User.model'
+import UserAuthenticationSessionModel from '../models/UserAuthenticationSession.model'
 import logger from '../utils/loggers'
 import appPortRepoTemplate from './app-port.repo'
 import appTemplate from './app.repo'
 import buildDeploymentHistoryTemplate from './build-deployment-history.repo'
 import migrationScript from './migration'
+import userAuthenticationSessionTemplate from './user-authentication-session.repo'
+import userTemplate from './user.repo'
 
 export const DEFAULT_DATABASE = DATABASES_CONFIG[DATABASES_CONFIG.default]
 
@@ -30,10 +35,18 @@ export default sequelize.authenticate()
 
 migrationScript(sequelize).then(() => logger.info('Migration scripts executed successfully'))
 
-const AppPort = AppPortModel(sequelize)
-const App = AppModel(sequelize)
-const BuildDeploymentHistory = BuildDeploymentHistoryModel(sequelize)
+export const AppPort = AppPortModel(sequelize)
+export const App = AppModel(sequelize)
+export const BuildDeploymentHistory = BuildDeploymentHistoryModel(sequelize)
+export const UserAuthenticationSession = UserAuthenticationSessionModel(sequelize)
+export const User = userModel(sequelize)
+export const UserPassword = UserPasswordModel(sequelize)
+
+User.hasOne(UserPassword, {foreignKey: 'userId', as: 'userPassword'})
+UserPassword.belongsTo(User, {foreignKey: 'userId', as: 'user'})
 
 export const appPortRepo = appPortRepoTemplate({conn: sequelize})
 export const appRepo = appTemplate({conn: sequelize})
 export const buildDeploymentHistoryRepo = buildDeploymentHistoryTemplate({conn: sequelize})
+export const userAuthenticationSessionRepo = userAuthenticationSessionTemplate({conn: sequelize})
+export const userRepo = userTemplate({conn: sequelize})

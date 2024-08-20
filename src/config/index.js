@@ -39,6 +39,8 @@ const config = {
 		},
 	},
 	DATABASES: get('databases'),
+	DEPLOYMENT_AUTHENTICATION_MECHANISM: get('deploymentAuthenticationMechanism'),
+	USER: get('user'),
 }
 
 export default config
@@ -48,6 +50,8 @@ export const LOGGING_CONFIG = config.LOGGING
 export const API_CONFIG = config.API
 export const APP_CONFIG = config.APP
 export const DATABASES_CONFIG = config.DATABASES
+export const {DEPLOYMENT_AUTHENTICATION_MECHANISM} = config
+export const {USER} = config
 
 /*
 	Can't use localDevEnv NODE_ENV name as 'local' or 'local-development' while devEnv NODE_ENV name as 'development'

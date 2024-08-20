@@ -134,6 +134,18 @@ export default class EnvConfigSetterService {
 					`http://0.0.0.0:${config.availablePort}`,
 				]
 				break
+			case APPS_TYPE.PYTHON:
+				envVariables = {
+					PORT: config.availablePort,
+					SERVER_PORT: config.availablePort,
+				}
+				break
+			case APPS_TYPE.JAVA:
+				envVariables = {
+					PORT: config.availablePort,
+					SERVER_PORT: config.availablePort,
+				}
+				break
 			default:
 				envVariables = {
 					PORT: config.availablePort,

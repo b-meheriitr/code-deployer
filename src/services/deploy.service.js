@@ -4,7 +4,7 @@ import {FsActionsHelper, isArchive} from '../utils/files.utils'
 import logger from '../utils/loggers'
 import {lc} from '../utils/loggers/models.logger'
 import {isWindowsOs} from '../utils/os.utils'
-import {dateString} from '../utils/utils'
+import {dateString, parseBoolean} from '../utils/utils'
 import * as appService from './app.service'
 import EnvConfigSetterService from './envConfigSetter.service'
 import NginxUtilService from './nginx.service'
@@ -83,7 +83,9 @@ export default async function (appId, ignoreDeletePattern, incomingFile, {req}) 
 		if (isArchive(incomingFile.originalname)) {
 			await fileActionsHelper.unzipBufferStream(incomingFile.buffer)
 		} else {
-			appConfig.script = incomingFile.originalname
+			if (req.body.script) {
+				appConfig.script = incomingFile.originalname
+			}
 			await fileActionsHelper.writeBufferContent(incomingFile.buffer, incomingFile.originalname)
 		}
 		const {actionResult, serverPort} = await envConfigSetterService.execute(() => pm2Service.restart())
@@ -99,54 +101,56 @@ export default async function (appId, ignoreDeletePattern, incomingFile, {req}) 
 		const rollbackStatuses = []
 		const postRollbackInfo = {}
 
-		await fileActionsHelper.rollBackDeleted()
-			.then(
-				status => rollbackStatuses.push({for: 'rollBackDeleted', status: !!status}),
-				err => {
-					rollbackStatuses.push({for: 'rollBackDeleted', status: 'error', reason: err})
-					throw err
-				},
-			)
-			.then(() => envConfigSetterService.rollBack())
-			.then(
-				status => rollbackStatuses.push({for: 'rollBackEnvConfigSetter', status: !!status}),
-				err => {
-					rollbackStatuses.push({for: 'rollBackEnvConfigSetter', status: 'error', reason: err})
-					throw err
-				},
-			)
-			.then(async () => {
-				if (await pm2Service.willRestartOnRollback()) {
-					const {
-						serverPort,
-						actionResult: status,
-					} = await new EnvConfigSetterService(appConfig, appId)
-						.execute(() => pm2Service.rollback())
+		if (!parseBoolean(req.body.skipRollback)) {
+			await fileActionsHelper.rollBackDeleted()
+				.then(
+					status => rollbackStatuses.push({for: 'rollBackDeleted', status: !!status}),
+					err => {
+						rollbackStatuses.push({for: 'rollBackDeleted', status: 'error', reason: err})
+						throw err
+					},
+				)
+				.then(() => envConfigSetterService.rollBack())
+				.then(
+					status => rollbackStatuses.push({for: 'rollBackEnvConfigSetter', status: !!status}),
+					err => {
+						rollbackStatuses.push({for: 'rollBackEnvConfigSetter', status: 'error', reason: err})
+						throw err
+					},
+				)
+				.then(async () => {
+					if (await pm2Service.willRestartOnRollback()) {
+						const {
+							serverPort,
+							actionResult: status,
+						} = await new EnvConfigSetterService(appConfig, appId)
+							.execute(() => pm2Service.rollback())
 
-					return {
-						status,
-						postRollbackInfo: status === true
-							? await setNginxRoute(serverPort, appConfig, {req})
-							: status,
+						return {
+							status,
+							postRollbackInfo: status === true
+							                  ? await setNginxRoute(serverPort, appConfig, {req})
+							                  : status,
+						}
 					}
-				}
 
-				return {status: await pm2Service.rollback()}
-			})
-			.then(
-				({status, postRollbackInfo: _postRollbackInfo}) => {
-					Object.assign(postRollbackInfo, _postRollbackInfo)
-					return rollbackStatuses.push({for: 'pm2Rollback', status: !!status})
-				},
-				err => {
-					rollbackStatuses.push({for: 'pm2Rollback', status: 'error', reason: err})
-					throw err
-				},
-			)
-			.catch(err => {
-				logger.error('Rollback error', err)
-				return err
-			})
+					return {status: await pm2Service.rollback()}
+				})
+				.then(
+					({status, postRollbackInfo: _postRollbackInfo}) => {
+						Object.assign(postRollbackInfo, _postRollbackInfo)
+						return rollbackStatuses.push({for: 'pm2Rollback', status: !!status})
+					},
+					err => {
+						rollbackStatuses.push({for: 'pm2Rollback', status: 'error', reason: err})
+						throw err
+					},
+				)
+				.catch(err => {
+					logger.error('Rollback error', err)
+					return err
+				})
+		}
 
 		/*
 			todo: dont send host/server related infos

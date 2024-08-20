@@ -2,7 +2,7 @@ import {DataTypes} from 'sequelize'
 import {beforeCreate, beforeUpdate} from '../utils/repo.utils'
 
 export default conn => {
-	conn.define(
+	return conn.define(
 		'AppPort',
 		{
 			id: {

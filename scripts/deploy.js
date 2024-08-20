@@ -16,6 +16,11 @@ const CONFIG = {
 	// APP_NAME: 'code-deployer-dev',
 	DEPLOYMENT_API_URL: 'http://10.21.86.161:3500/api/deploy',
 	APP_NAME: 'code-deployer',
+	// DEPLOYMENT_API_URL: 'http://10.21.54.93:8095/api/deploy',
+	// DEPLOYMENT_API_URL: 'http://10.21.86.161:8080/api/deploy',
+	// APP_NAME: 'code-deployer-base',
+	// DEPLOYMENT_API_URL: 'http://10.21.54.91:8080/api/deploy',
+	// APP_NAME: 'code-deployer-base',
 	DEPLOYMENT_IGNORE_DELETE: [
 		'logs/**',
 		'data/**',

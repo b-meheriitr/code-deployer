@@ -24,3 +24,41 @@ export class CorruptedIncomingZipError extends Error {
 		super('Uploaded zip is corrupted/invalid')
 	}
 }
+
+export class UserAuthenticationFailedError extends Error {
+	public attemptsRemaining: number
+
+	constructor({reason, attemptsRemaining}: UserAuthenticationFailedErrorProps) {
+		super(`Authentication failed due to ${reason}`)
+		this.attemptsRemaining = attemptsRemaining
+	}
+}
+
+export interface UserAuthenticationFailedErrorProps {
+	reason: string,
+	attemptsRemaining: number
+}
+
+export class AuthenticationSessionNotfoundError extends Error {
+	constructor(sessionId: string) {
+		super(`Authentication session by id ${sessionId} not found`)
+	}
+}
+
+export class UserNotfoundError extends Error {
+	static BY = {
+		USER_NAME: 'userName',
+		MOBILE_NO: 'mobileNo',
+		EMAIL: 'email',
+	}
+
+	constructor(by: string, value: any) {
+		super(`User not found by ${by}:${value}`)
+	}
+}
+
+export class UserAlreadyExistsError extends Error {
+	constructor(by: string, value: any) {
+		super(`User already exists by ${by}: ${value}`)
+	}
+}

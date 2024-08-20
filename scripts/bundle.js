@@ -7,7 +7,12 @@ import path from 'path'
 import projectPackageJson from '../package.json'
 
 const packagesInstallationPath = 'dist/bundle'
-const bundledDependencies = ['fsevents', 'pm2-deploy', 'pg-hstore', 'sqlite3', 'tedious', 'mysql2']
+const bundledDependencies = ['fsevents', 'pm2-deploy', 'pg-hstore', 'sqlite3', 'tedious',
+                             'mysql2',
+                             "nock",
+                             "aws-sdk",
+                             "mock-aws-s3",
+]
 
 function isBundledDepsAllDeps() {
 	return bundledDependencies === '*' || bundledDependencies[0] === '*'
@@ -46,8 +51,8 @@ function createPackageJsonFile() {
 					'engines',
 					'version',
 					...(isBundledDepsAllDeps()
-							? ['dependencies']
-							: bundledDependencies.map(b => (`dependencies.${b}`))
+					    ? ['dependencies']
+					    : bundledDependencies.map(b => (`dependencies.${b}`))
 					)
 					,
 				],

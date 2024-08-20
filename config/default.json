@@ -57,5 +57,9 @@
     },
     "logging": false,
     "default": "sqlite"
+  },
+  "deploymentAuthenticationMechanism": "otp",
+  "user": {
+    "passwordSaltRounds": 10
   }
 }

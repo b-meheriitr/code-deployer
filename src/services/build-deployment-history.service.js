@@ -8,8 +8,10 @@ function createRecord({req, startTime, endTime, error}, type = 'deployment') {
 		initTime: toLocalDateString(startTime),
 		endTime: toLocalDateString(endTime),
 		totalTime: endTime.diff(startTime, 'milliseconds'),
+		// todo
 		userId: req.user?.userId,
-		userIp: req.user?.clientIp,
+		userIp: req.clientIp,
+		requestId: req.requestId,
 		error: error && (error instanceof Error) ? error.stack : JSON.stringify(error),
 	}
 }
